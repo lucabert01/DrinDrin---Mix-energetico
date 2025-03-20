@@ -10,7 +10,8 @@ def transmission_capacity_into_matrix(anno):
    Parametri:
     - anno: Anno di riferimento (2023, 2030, 2035, 2040) (int)
    """
-   data_path = Path("../dati_casoStudioItalia/network_data/capacities_distances.xlsx")
+   data_path = Path("./dati_casoStudioItalia/network_data/capacities_distances.xlsx")
+   print(data_path)
    transmission_data = pd.read_excel(data_path, sheet_name="Raw data - tr. interna " + str(anno))
 
    matrice_capacita = pd.read_excel(data_path, sheet_name="Capacità di trasmissione MW", index_col=0).fillna(0)
@@ -27,4 +28,3 @@ def transmission_capacity_into_matrix(anno):
    print("Matrice capacità aggiornata e salvata con successo")
 
 transmission_capacity_into_matrix(2023)
-a =1

@@ -10,6 +10,8 @@ from utilities.process_data import transmission_capacity_into_matrix
 # parametri scenario
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024 (to be doule checked)
+max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
+
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -79,8 +81,8 @@ for node in node_names:
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "r") as json_file:
         technologies = json.load(json_file)
     technologies["new"] = new_technologies
-    for tech in existing_technologies:
-        technologies["existing"] = {tech: float(existing_generation_capacity.loc[tech, node])}
+    technologies["existing"] = {tech: float(existing_generation_capacity.loc[tech, node])
+                                for tech in existing_technologies}
 
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "w") as json_file:
         json.dump(technologies, json_file, indent=4)
@@ -102,7 +104,7 @@ with open(input_data_path / "period1" / "Networks.json", "w") as json_file:
 os.makedirs(input_data_path / "period1" / "network_topology" / "existing" / "electricityOnshore", exist_ok=True)
 
 print("Existing network")
-# Use the templates, fill and save them to the respective directory
+
 # Connection: we allow all the nodes to be potentially connected
 connection = pd.read_csv(input_data_path / "period1" / "network_topology" / "existing" / "connection.csv", sep=";", index_col=0)
 for node_x in node_names:
@@ -116,10 +118,12 @@ print("Connection:", connection)
 os.remove(input_data_path / "period1" / "network_topology" / "existing" / "connection.csv")
 
 # Distance
-#TODO add distances
 distance = pd.read_csv(input_data_path / "period1" / "network_topology" / "existing" / "distance.csv", sep=";", index_col=0)
-distance.loc["city", "rural"] = 50
-distance.loc["rural", "city"] = 50
+for node_x in node_names:
+    for node_y in node_names:
+        if node_x != node_y:
+            distance.loc[node_x, node_y] = network_distances.at[node_x, node_y]
+            distance.loc[node_y, node_x] = network_distances.at[node_x, node_y]
 distance.to_csv(input_data_path / "period1" / "network_topology" / "existing" / "electricityOnshore" / "distance.csv", sep=";")
 print("Distance:", distance)
 
@@ -128,8 +132,11 @@ os.remove(input_data_path / "period1" / "network_topology" / "existing" / "dista
 
 # Size
 size = pd.read_csv(input_data_path / "period1" / "network_topology" / "existing" / "size.csv", sep=";", index_col=0)
-size.loc["city", "rural"] = 1000
-size.loc["rural", "city"] = 1000
+for node_x in node_names:
+    for node_y in node_names:
+        if node_x != node_y:
+            size.loc[node_x, node_y] = network_capacities.at[node_x, node_y]
+            size.loc[node_y, node_x] = network_capacities.at[node_y, node_x]
 size.to_csv(input_data_path / "period1" / "network_topology" / "existing" / "electricityOnshore" / "size.csv", sep=";")
 print("Size:", size)
 
@@ -144,31 +151,52 @@ os.makedirs(input_data_path / "period1" / "network_topology" / "new" / "electric
 
 # max size arc
 arc_size = pd.read_csv(input_data_path / "period1" / "network_topology" / "new" / "size_max_arcs.csv", sep=";", index_col=0)
-arc_size.loc["city", "rural"] = 3000
-arc_size.loc["rural", "city"] = 3000
+for node_x in node_names:
+    for node_y in node_names:
+        if node_x != node_y:
+            arc_size.loc[node_x, node_y] = max_new_trasmission_capacity
+            arc_size.loc[node_y, node_x] = max_new_trasmission_capacity
 arc_size.to_csv(input_data_path / "period1" / "network_topology" / "new" / "electricityOnshore" / "size_max_arcs.csv", sep=";")
 print("Max size per arc:", arc_size)
 
-# Use the templates, fill and save them to the respective directory
-# Connection
 connection = pd.read_csv(input_data_path / "period1" / "network_topology" / "new" / "connection.csv", sep=";", index_col=0)
-connection.loc["city", "rural"] = 1
-connection.loc["rural", "city"] = 1
+for node_x in node_names:
+    for node_y in node_names:
+        if node_x != node_y:
+            connection.loc[node_x, node_y] = 1
 connection.to_csv(input_data_path / "period1" / "network_topology" / "new" / "electricityOnshore" / "connection.csv", sep=";")
 print("Connection:", connection)
 
 # Delete the template
 os.remove(input_data_path / "period1" / "network_topology" / "new" / "connection.csv")
 
+
 # Distance
 distance = pd.read_csv(input_data_path / "period1" / "network_topology" / "new" / "distance.csv", sep=";", index_col=0)
-distance.loc["city", "rural"] = 50
-distance.loc["rural", "city"] = 50
+for node_x in node_names:
+    for node_y in node_names:
+        if node_x != node_y:
+            distance.loc[node_x, node_y] = network_distances.at[node_x, node_y]
+            distance.loc[node_y, node_x] = network_distances.at[node_x, node_y]
 distance.to_csv(input_data_path / "period1" / "network_topology" / "new" / "electricityOnshore" / "distance.csv", sep=";")
 print("Distance:", distance)
 
 # Delete the template
 os.remove(input_data_path / "period1" / "network_topology" / "new" / "distance.csv")
-
 # Delete the max_size_arc template
 os.remove(input_data_path / "period1" / "network_topology" / "new" / "size_max_arcs.csv")
+
+# Copy network data and change costs
+adopt.copy_network_data(input_data_path)
+
+with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "r") as json_file:
+    network_data = json.load(json_file)
+#TODO aggiungi parametri (costi) network corretti
+network_data["Economics"]["gamma2"] = 40000
+network_data["Economics"]["gamma4"] = 300
+
+with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "w") as json_file:
+    json.dump(network_data, json_file, indent=4)
+
+# TODO aggiorna costi tecnologie in base al file excel
+# TODO inserire profili orari di domanda

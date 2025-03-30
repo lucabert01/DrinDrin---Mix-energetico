@@ -4,12 +4,12 @@ from pathlib import Path
 import os
 import pandas as pd
 import numpy as np
-from utilities.process_data import transmission_capacity_into_matrix
+from utilities.process_data import transmission_capacity_into_matrix, update_technology_cost, update_fuel_cost
 
 
 # parametri scenario
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
-demand_increase = 1.0 # compared to year 2024 (to be doule checked)
+demand_increase = 1.0 # compared to year 2024 (to be double checked)
 max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 
 
@@ -22,13 +22,13 @@ input_data_path.mkdir(parents=True, exist_ok=True)
 adopt.create_optimization_templates(input_data_path)
 
 # Import data
-case_study_data_path = Path("./dati_casoStudioItalia")
+path_data_case_study = Path("./dati_casoStudioItalia")
 transmission_capacity_into_matrix(ref_year_network)
-network_capacities = pd.read_excel(case_study_data_path/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Capacità di trasmissione MW')
-network_location = pd.read_excel(case_study_data_path/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Info geografiche')
-network_distances = pd.read_excel(case_study_data_path/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Distanza km')
+network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Capacità di trasmissione MW')
+network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Info geografiche')
+network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Distanza km')
 node_names = network_location.index.astype(str).tolist()
-existing_generation_capacity = pd.read_excel(case_study_data_path/"installed_capacity/generazione_domanda_per_zona_v01.xlsx", index_col=0, sheet_name="Existing_capacities")
+existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v01.xlsx", index_col=0, sheet_name="Existing_capacities")
 
 
 # Load json template
@@ -77,12 +77,20 @@ existing_technologies = existing_generation_capacity.index.tolist()
 #                     ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
 #                     + ["NuclearPlant"])
 new_technologies = existing_technologies
+technologies_per_node = {}
+# Assigning
+for node in node_names:
+    technologies_per_node[node] = {}
+    technologies_per_node[node]["existing"] = existing_technologies
+    technologies_per_node[node]["new"] = new_technologies
+
+
 for node in node_names:
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "r") as json_file:
         technologies = json.load(json_file)
-    technologies["new"] = new_technologies
+    technologies["new"] = technologies_per_node[node]["new"]
     technologies["existing"] = {tech: float(existing_generation_capacity.loc[tech, node])
-                                for tech in existing_technologies}
+                                for tech in technologies_per_node[node]["existing"]}
 
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "w") as json_file:
         json.dump(technologies, json_file, indent=4)
@@ -198,5 +206,7 @@ network_data["Economics"]["gamma4"] = 300
 with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "w") as json_file:
     json.dump(network_data, json_file, indent=4)
 
-# TODO aggiorna costi tecnologie in base al file excel
+# Aggiorna costi tecnologie in base al file excel "altri_dati"
+update_technology_cost(input_data_path, technologies_per_node, node_names)
+update_fuel_cost(topology["carriers"])
 # TODO inserire profili orari di domanda

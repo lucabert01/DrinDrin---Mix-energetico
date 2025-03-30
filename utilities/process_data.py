@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import json
 
 
 def transmission_capacity_into_matrix(anno):
@@ -27,4 +28,33 @@ def transmission_capacity_into_matrix(anno):
 
    print("Matrice capacità aggiornata e salvata con successo")
 
-transmission_capacity_into_matrix(2023)
+def update_technology_cost(input_data_path, technologies_per_node, node_names):
+   path = Path("./dati_casoStudioItalia")
+   capex_data = pd.read_excel(path/"altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
+   for node in node_names:
+      all_tech_per_node = list(set(technologies_per_node[node]["new"]) | set(technologies_per_node[node]["existing"]))
+      for tech in all_tech_per_node:
+         with open(input_data_path / "period1" / "node_data" / node / "technology_data" / f"{tech}.json",
+                   "r") as json_file:
+            tec_data = json.load(json_file)
+            tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
+
+         with open(input_data_path / "period1" / "node_data" / node / "technology_data" /  f"{tech}.json",
+                   "w") as json_file:
+            json.dump(tec_data, json_file, indent=4)
+
+# TODO make update fuel cost
+def update_fuel_cost(input_data_path, technologies_per_node, node_names):
+   path = Path("./dati_casoStudioItalia")
+   capex_data = pd.read_excel(path/"altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
+   for node in node_names:
+      all_tech_per_node = list(set(technologies_per_node[node]["new"]) | set(technologies_per_node[node]["existing"]))
+      for tech in all_tech_per_node:
+         with open(input_data_path / "period1" / "node_data" / node / "technology_data" / f"{tech}.json",
+                   "r") as json_file:
+            tec_data = json.load(json_file)
+            tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
+
+         with open(input_data_path / "period1" / "node_data" / node / "technology_data" /  f"{tech}.json",
+                   "w") as json_file:
+            json.dump(tec_data, json_file, indent=4)

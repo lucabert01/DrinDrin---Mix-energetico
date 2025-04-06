@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 import json
+import adopt_net0 as adopt
+
 
 
 def transmission_capacity_into_matrix(anno):
@@ -28,33 +30,122 @@ def transmission_capacity_into_matrix(anno):
 
    print("Matrice capacità aggiornata e salvata con successo")
 
-def update_technology_cost(input_data_path, technologies_per_node, node_names):
+
+def update_technology_capex(path_files_technologies):
    path = Path("./dati_casoStudioItalia")
-   capex_data = pd.read_excel(path/"altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
-   for node in node_names:
-      all_tech_per_node = list(set(technologies_per_node[node]["new"]) | set(technologies_per_node[node]["existing"]))
-      for tech in all_tech_per_node:
-         with open(input_data_path / "period1" / "node_data" / node / "technology_data" / f"{tech}.json",
-                   "r") as json_file:
-            tec_data = json.load(json_file)
-            tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
+   capex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
 
-         with open(input_data_path / "period1" / "node_data" / node / "technology_data" /  f"{tech}.json",
-                   "w") as json_file:
+   for json_file_path in Path(path_files_technologies).glob("*.json"):
+      tech = json_file_path.stem  # Get the filename without .json extension
+
+      with open(json_file_path, "r") as json_file:
+         tec_data = json.load(json_file)
+
+      if tech in capex_data.index:
+         tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
+
+         with open(json_file_path, "w") as json_file:
             json.dump(tec_data, json_file, indent=4)
+      else:
+         print(f"Warning: {tech} not found in CAPEX data.")
 
-# TODO make update fuel cost
-def update_fuel_cost(input_data_path, technologies_per_node, node_names):
+def update_technology_opex(path_files_technologies):
    path = Path("./dati_casoStudioItalia")
-   capex_data = pd.read_excel(path/"altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
-   for node in node_names:
-      all_tech_per_node = list(set(technologies_per_node[node]["new"]) | set(technologies_per_node[node]["existing"]))
-      for tech in all_tech_per_node:
-         with open(input_data_path / "period1" / "node_data" / node / "technology_data" / f"{tech}.json",
-                   "r") as json_file:
-            tec_data = json.load(json_file)
-            tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
+   opex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="OPEX")
 
-         with open(input_data_path / "period1" / "node_data" / node / "technology_data" /  f"{tech}.json",
-                   "w") as json_file:
+   for json_file_path in Path(path_files_technologies).glob("*.json"):
+      tech = json_file_path.stem  # Get the filename without .json extension
+
+      with open(json_file_path, "r") as json_file:
+         tec_data = json.load(json_file)
+
+      if tech in opex_data.index:
+         tec_data["Economics"]["OPEX_fixed"] = float(opex_data.loc[tech, "OPEX"])
+
+         with open(json_file_path, "w") as json_file:
             json.dump(tec_data, json_file, indent=4)
+      else:
+         print(f"Warning: {tech} not found in OPEX data.")
+
+def update_nuclear_coal_cost(path_files_technologies):
+   """
+   Function to assign the OPEX_variable of coal and nuclear with the selected cost of fuel
+   :param path_files_technologies:
+   :return:
+   """
+   path = Path("./dati_casoStudioItalia")
+   fuel_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Fuel_cost")
+   fuel_data.index = fuel_data.index.str.strip()
+
+   for json_file_path in Path(path_files_technologies).glob("*.json"):
+      tech = json_file_path.stem  # Get the filename without .json extension
+      if tech == "NuclearPlant":
+         with open(json_file_path, "r") as json_file:
+            tec_data = json.load(json_file)
+            tec_data["Economics"]["OPEX_variable"] = float(fuel_data.loc["costo_combustibile_nucleare", "fuel_cost"])
+
+            with open(json_file_path, "w") as json_file:
+               json.dump(tec_data, json_file, indent=4)
+      elif tech == "CoalPlant":
+         with open(json_file_path, "r") as json_file:
+            tec_data = json.load(json_file)
+            tec_data["Economics"]["OPEX_variable"] = float(fuel_data.loc["costo_combustibile_carbone", "fuel_cost"])
+
+            with open(json_file_path, "w") as json_file:
+               json.dump(tec_data, json_file, indent=4)
+
+def update_carriers_cost(input_data_path, fuels_available, node_names):
+   # solo gas in questo caso perche' carbone e nucleare sono gia' inclusi nei costi variabili della rispettiva tecnologia
+   path = Path("./dati_casoStudioItalia")
+   fuel_data = pd.read_excel(path/"altri_dati.xlsx", index_col=0, sheet_name="Fuel_cost")
+   for node in node_names:
+      for fuel in fuels_available:
+         if fuel == "gas":
+            adopt.fill_carrier_data(input_data_path, value_or_data=float(fuel_data.loc["costo_combustibile_gas", "fuel_cost"]), columns=['Import price'], carriers=[fuel],
+                                 nodes=[node])
+
+def read_el_import_data(input_data_path, node_names):
+   path = Path("./dati_casoStudioItalia")
+   el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
+
+   for node in node_names:
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Import limit'],
+                              carriers="electricity",
+                              nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Import price'],
+                              carriers="electricity",
+                              nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "emission_factor_t/MWh"]), columns=['Import emission factor'],
+                              carriers="electricity",
+                              nodes=node)
+def read_el_export_data(input_data_path, node_names):
+   path = Path("./dati_casoStudioItalia")
+   el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
+
+   for node in node_names:
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Import limit'],
+                              carriers="electricity",
+                              nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Import price'],
+                              carriers="electricity",
+                              nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=0, columns=['Import emission factor'],
+                              carriers="electricity",
+                              nodes=node)
+
+def set_carbon_tax(input_data_path, node_names, carbon_tax):
+   for node in node_names:
+    carbon_cost_path = Path(input_data_path/"period1/node_data/" + node + "/CarbonCost.csv")
+    carbon_cost_template = pd.read_csv(carbon_cost_path, sep=';', index_col=0, header=0)
+    carbon_cost_template['price'] = carbon_tax
+    carbon_cost_template = carbon_cost_template.reset_index()
+    carbon_cost_template.to_csv(carbon_cost_path, sep=';', index=False)
+
+def read_demand(input_data_path, node_names):
+   path = Path("./dati_casoStudioItalia")
+   demand_data = pd.read_excel(path / "installed_capacity" / "generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Demand")
+   for node in node_names:
+      adopt.fill_carrier_data(input_data_path, value_or_data=demand_data.loc[:, node], columns=['Demand'], carriers="electricity",
+                                 nodes=node)
+
+      # TODO solve error non-exisitng path ...carrier_data/e

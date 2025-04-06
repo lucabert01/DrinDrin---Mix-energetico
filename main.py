@@ -3,15 +3,26 @@ import json
 from pathlib import Path
 import os
 import pandas as pd
-import numpy as np
-from utilities.process_data import transmission_capacity_into_matrix, update_technology_cost, update_fuel_cost
+from utilities.process_data import (
+    transmission_capacity_into_matrix,
+    update_technology_capex,
+    update_technology_opex,
+    update_carriers_cost,
+    update_nuclear_coal_cost,
+    read_demand,
+    read_el_import_data,
+    read_el_export_data,
+    set_carbon_tax,
+)
 
+# Sviluppo di mix energetico ottimale per Italia. Assunzioni importanti: 1) import/export con estero possibili sempre
+# in base alla capacità di trasmissione installata 2) prezzo di import e export sono uguali (100 EUR/MWh tentative)
 
 # parametri scenario
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
-demand_increase = 1.0 # compared to year 2024 (to be double checked)
+demand_increase = 1.0 # compared to year 2024
 max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
-
+carbon_tax = 0
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -22,14 +33,19 @@ input_data_path.mkdir(parents=True, exist_ok=True)
 adopt.create_optimization_templates(input_data_path)
 
 # Import data
+path_files_technologies = Path("./files_tecnologie")
 path_data_case_study = Path("./dati_casoStudioItalia")
 transmission_capacity_into_matrix(ref_year_network)
 network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Capacità di trasmissione MW')
 network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Info geografiche')
 network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Distanza km')
-node_names = network_location.index.astype(str).tolist()
 existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v01.xlsx", index_col=0, sheet_name="Existing_capacities")
+node_names = network_location.index.astype(str).tolist()
 
+# Update technology costs
+update_technology_capex(path_files_technologies)
+update_technology_opex(path_files_technologies)
+update_nuclear_coal_cost(path_files_technologies)
 
 # Load json template
 with open(input_data_path / "Topology.json", "r") as json_file:
@@ -70,15 +86,14 @@ adopt.show_available_technologies()
 
 
 # Add available technologies for every node
-# TODO add nuclear and coal to new technologies and add json files
 existing_technologies = existing_generation_capacity.index.tolist()
 # removing hydro and coal and adding nuclear as possible new technologies
-# new_technologies = ([tech for tech in existing_technologies if tech not in
-#                     ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
-#                     + ["NuclearPlant"])
-new_technologies = existing_technologies
+new_technologies = ([tech for tech in existing_technologies if tech not in
+                    ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
+                    + ["NuclearPlant"])
 technologies_per_node = {}
-# Assigning
+
+# Assigning available technologies for each node
 for node in node_names:
     technologies_per_node[node] = {}
     technologies_per_node[node]["existing"] = existing_technologies
@@ -96,7 +111,7 @@ for node in node_names:
         json.dump(technologies, json_file, indent=4)
 
 # Copy over technology files
-adopt.copy_technology_data(input_data_path)
+adopt.copy_technology_data(input_data_path, path_files_technologies)
 
 # Add networks
 with open(input_data_path / "period1" / "Networks.json", "r") as json_file:
@@ -207,6 +222,16 @@ with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json
     json.dump(network_data, json_file, indent=4)
 
 # Aggiorna costi tecnologie in base al file excel "altri_dati"
-update_technology_cost(input_data_path, technologies_per_node, node_names)
-update_fuel_cost(topology["carriers"])
-# TODO inserire profili orari di domanda
+update_carriers_cost(input_data_path, topology["carriers"], node_names)
+# Leggi dati di import/export con estero
+read_el_import_data(input_data_path, node_names)
+read_el_export_data(input_data_path, node_names)
+# Aggiungi carbon tax
+set_carbon_tax(input_data_path, node_names, carbon_tax)
+# Leggi profili di domanda orari
+read_demand(input_data_path, node_names)
+
+# Build and solve optimization problem
+m = adopt.ModelHub()
+m.read_data(input_data_path)
+m.quick_solve()

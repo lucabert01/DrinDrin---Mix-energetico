@@ -4,7 +4,6 @@ import json
 import adopt_net0 as adopt
 
 
-
 def transmission_capacity_into_matrix(anno):
    """"
    funzione per riscrivere i dati di capacità di trasmissione interna in forma matriciale nel foglio
@@ -14,7 +13,6 @@ def transmission_capacity_into_matrix(anno):
     - anno: Anno di riferimento (2023, 2030, 2035, 2040) (int)
    """
    data_path = Path("./dati_casoStudioItalia/network_data/capacities_distances.xlsx")
-   print(data_path)
    transmission_data = pd.read_excel(data_path, sheet_name="Raw data - tr. interna " + str(anno))
 
    matrice_capacita = pd.read_excel(data_path, sheet_name="Capacità di trasmissione MW", index_col=0).fillna(0)
@@ -30,6 +28,29 @@ def transmission_capacity_into_matrix(anno):
 
    print("Matrice capacità aggiornata e salvata con successo")
 
+def import_hydro_inflows(input_data_path):
+    data_path = Path("./dati_casoStudioItalia/Hydro inflows 2017.xlsx")
+    hydro_inflows =  pd.read_excel(data_path, sheet_name="Hydro_inflows ", index_col=0)
+    nodes = hydro_inflows.columns.tolist()
+    hydro_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
+
+    for node in nodes:
+        for week in range(0,52):
+            start_hour = week * 168
+            end_hour = (week + 1) * 168
+            #Convert from GWh/week to MWh/h
+            hydro_inflows_hourly.loc[start_hour:end_hour - 1, node] = hydro_inflows.loc[week+1, node]*1000/168
+            #add last day of the year manually
+            hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]
+
+
+    for node in nodes:
+        climate_data_file = (
+                input_data_path / "period1" / "node_data" / node / "ClimateData.csv"
+        )
+        climate_data = pd.read_csv(climate_data_file)
+        climate_data["Hydro_Reservoir_inflow"] = hydro_inflows_hourly[node].values
+        climate_data.to_csv(climate_data_file, index=False, sep=";")
 
 def update_technology_capex(path_files_technologies):
    path = Path("./dati_casoStudioItalia")
@@ -103,49 +124,50 @@ def update_carriers_cost(input_data_path, fuels_available, node_names):
          if fuel == "gas":
             adopt.fill_carrier_data(input_data_path, value_or_data=float(fuel_data.loc["costo_combustibile_gas", "fuel_cost"]), columns=['Import price'], carriers=[fuel],
                                  nodes=[node])
+            adopt.fill_carrier_data(input_data_path, value_or_data=500000, columns=['Import limit'], carriers=[fuel],
+                                 nodes=[node])
 
-def read_el_import_data(input_data_path, node_names):
+def update_el_import_data(input_data_path, node_names):
    path = Path("./dati_casoStudioItalia")
    el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
 
    for node in node_names:
       adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Import limit'],
-                              carriers="electricity",
-                              nodes=node)
+                              carriers=["electricity"],
+                              nodes=[node])
       adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Import price'],
-                              carriers="electricity",
-                              nodes=node)
+                              carriers=["electricity"],
+                              nodes=[node])
       adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "emission_factor_t/MWh"]), columns=['Import emission factor'],
-                              carriers="electricity",
-                              nodes=node)
-def read_el_export_data(input_data_path, node_names):
+                              carriers=["electricity"],
+                              nodes=[node])
+def update_el_export_data(input_data_path, node_names):
    path = Path("./dati_casoStudioItalia")
    el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
 
    for node in node_names:
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Import limit'],
-                              carriers="electricity",
-                              nodes=node)
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Import price'],
-                              carriers="electricity",
-                              nodes=node)
-      adopt.fill_carrier_data(input_data_path, value_or_data=0, columns=['Import emission factor'],
-                              carriers="electricity",
-                              nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Export limit'],
+                              carriers=["electricity"],
+                              nodes=[node])
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Export price'],
+                              carriers=["electricity"],
+                              nodes=[node])
+      adopt.fill_carrier_data(input_data_path, value_or_data=0, columns=['Export emission factor'],
+                              carriers=["electricity"],
+                              nodes=[node])
 
 def set_carbon_tax(input_data_path, node_names, carbon_tax):
    for node in node_names:
-    carbon_cost_path = Path(input_data_path/"period1/node_data/" + node + "/CarbonCost.csv")
-    carbon_cost_template = pd.read_csv(carbon_cost_path, sep=';', index_col=0, header=0)
-    carbon_cost_template['price'] = carbon_tax
-    carbon_cost_template = carbon_cost_template.reset_index()
-    carbon_cost_template.to_csv(carbon_cost_path, sep=';', index=False)
+        carbon_cost_path = Path(input_data_path) / "period1" / "node_data" / node / "CarbonCost.csv"
+        carbon_cost_template = pd.read_csv(carbon_cost_path, sep=';', index_col=0, header=0)
+        carbon_cost_template['price'] = carbon_tax
+        carbon_cost_template = carbon_cost_template.reset_index()
+        carbon_cost_template.to_csv(carbon_cost_path, sep=';', index=False)
 
-def read_demand(input_data_path, node_names):
+def update_demand(input_data_path, node_names):
    path = Path("./dati_casoStudioItalia")
    demand_data = pd.read_excel(path / "installed_capacity" / "generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Demand")
    for node in node_names:
-      adopt.fill_carrier_data(input_data_path, value_or_data=demand_data.loc[:, node], columns=['Demand'], carriers="electricity",
-                                 nodes=node)
+      adopt.fill_carrier_data(input_data_path, value_or_data=demand_data.loc[:, node], columns=['Demand'], carriers=["electricity"],
+                                 nodes=[node])
 
-      # TODO solve error non-exisitng path ...carrier_data/e

@@ -3,7 +3,7 @@
         "Hydro_Reservoir": 16109.0,
         "GasTurbine_simple": 30318.0,
         "Photovoltaic": 17970.0,
-        "WindTurbine_Onshore_4000": 216.0,
+        "WindTurbine_Onshore_1500": 216.0,
         "CoalPlant": 340.0,
         "Storage_Battery": 8170.0,
         "PumpedHydro_Closed": 43125.0
@@ -11,7 +11,7 @@
     "new": [
         "GasTurbine_simple",
         "Photovoltaic",
-        "WindTurbine_Onshore_4000",
+        "WindTurbine_Onshore_1500",
         "Storage_Battery",
         "NuclearPlant"
     ]

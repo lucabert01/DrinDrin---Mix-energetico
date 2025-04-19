@@ -5,15 +5,17 @@ import os
 import pandas as pd
 from utilities.process_data import (
     transmission_capacity_into_matrix,
+    import_hydro_inflows,
     update_technology_capex,
     update_technology_opex,
     update_carriers_cost,
     update_nuclear_coal_cost,
-    read_demand,
-    read_el_import_data,
-    read_el_export_data,
+    update_demand,
+    update_el_import_data,
+    update_el_export_data,
     set_carbon_tax,
 )
+from adopt_net0.data_preprocessing import load_climate_data_from_api
 
 # Sviluppo di mix energetico ottimale per Italia. Assunzioni importanti: 1) import/export con estero possibili sempre
 # in base alla capacità di trasmissione installata 2) prezzo di import e export sono uguali (100 EUR/MWh tentative)
@@ -36,10 +38,10 @@ adopt.create_optimization_templates(input_data_path)
 path_files_technologies = Path("./files_tecnologie")
 path_data_case_study = Path("./dati_casoStudioItalia")
 transmission_capacity_into_matrix(ref_year_network)
-network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Capacità di trasmissione MW')
-network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Info geografiche')
-network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances.xlsx", index_col=0, sheet_name='Distanza km')
-existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v01.xlsx", index_col=0, sheet_name="Existing_capacities")
+network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Capacità di trasmissione MW')
+network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Info geografiche')
+network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Distanza km')
+existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Existing_capacities")
 node_names = network_location.index.astype(str).tolist()
 
 # Update technology costs
@@ -85,9 +87,14 @@ node_location.to_csv(input_data_path / "NodeLocations.csv", sep=';', index=False
 adopt.show_available_technologies()
 
 
+
+
 # Add available technologies for every node
 existing_technologies = existing_generation_capacity.index.tolist()
 # removing hydro and coal and adding nuclear as possible new technologies
+new_technologies = ([tech for tech in existing_technologies if tech not in
+                    ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
+                    + ["NuclearPlant"])
 new_technologies = ([tech for tech in existing_technologies if tech not in
                     ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
                     + ["NuclearPlant"])
@@ -224,12 +231,17 @@ with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json
 # Aggiorna costi tecnologie in base al file excel "altri_dati"
 update_carriers_cost(input_data_path, topology["carriers"], node_names)
 # Leggi dati di import/export con estero
-read_el_import_data(input_data_path, node_names)
-read_el_export_data(input_data_path, node_names)
+update_el_import_data(input_data_path, node_names)
+update_el_export_data(input_data_path, node_names)
 # Aggiungi carbon tax
 set_carbon_tax(input_data_path, node_names, carbon_tax)
 # Leggi profili di domanda orari
-read_demand(input_data_path, node_names)
+update_demand(input_data_path, node_names)
+# Add hydro inflows to climate data
+import_hydro_inflows(input_data_path)
+# Get climate data
+folder_climate_data = input_data_path / "period1"
+load_climate_data_from_api(folder_path=folder_climate_data)
 
 # Build and solve optimization problem
 m = adopt.ModelHub()

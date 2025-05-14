@@ -240,8 +240,7 @@ update_demand(input_data_path, node_names)
 # Add hydro inflows to climate data
 import_hydro_inflows(input_data_path)
 # Get climate data
-folder_climate_data = input_data_path / "period1"
-load_climate_data_from_api(folder_path=folder_climate_data)
+load_climate_data_from_api(folder_path=input_data_path)
 
 # Build and solve optimization problem
 m = adopt.ModelHub()

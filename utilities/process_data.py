@@ -7,12 +7,12 @@ import adopt_net0 as adopt
 def transmission_capacity_into_matrix(anno):
    """"
    funzione per riscrivere i dati di capacità di trasmissione interna in forma matriciale nel foglio
-   Excel "capacities_distances".
+   Excel "capacities_distances_v1".
 
    Parametri:
     - anno: Anno di riferimento (2023, 2030, 2035, 2040) (int)
    """
-   data_path = Path("./dati_casoStudioItalia/network_data/capacities_distances.xlsx")
+   data_path = Path("./dati_casoStudioItalia/network_data/capacities_distances_v1.xlsx")
    transmission_data = pd.read_excel(data_path, sheet_name="Raw data - tr. interna " + str(anno))
 
    matrice_capacita = pd.read_excel(data_path, sheet_name="Capacità di trasmissione MW", index_col=0).fillna(0)
@@ -29,6 +29,8 @@ def transmission_capacity_into_matrix(anno):
    print("Matrice capacità aggiornata e salvata con successo")
 
 def import_hydro_inflows(input_data_path):
+    """Importare i dati di flusso dei fiumi nei bacini idroelettrici. Per il pompaggio chiuso assumiamo 0
+    visto che abbiamo assunto che tutti i flussi siano diretti ai bacini aperti"""
     data_path = Path("./dati_casoStudioItalia/Hydro inflows 2017.xlsx")
     hydro_inflows =  pd.read_excel(data_path, sheet_name="Hydro_inflows ", index_col=0)
     nodes = hydro_inflows.columns.tolist()
@@ -50,6 +52,7 @@ def import_hydro_inflows(input_data_path):
         )
         climate_data = pd.read_csv(climate_data_file)
         climate_data["Hydro_Reservoir_inflow"] = hydro_inflows_hourly[node].values
+        climate_data["PumpedHydro_Closed_inflow"] = 0
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
 def update_technology_capex(path_files_technologies):

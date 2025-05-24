@@ -52,7 +52,6 @@ def import_hydro_inflows(input_data_path):
         )
         climate_data = pd.read_csv(climate_data_file)
         climate_data["Hydro_Reservoir_inflow"] = hydro_inflows_hourly[node].values
-        climate_data["PumpedHydro_Closed_inflow"] = 0
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
 def update_technology_capex(path_files_technologies):

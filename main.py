@@ -42,6 +42,7 @@ transmission_capacity_into_matrix(ref_year_network)
 network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Capacità_trans_ MW_monodir')
 network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Info geografiche')
 network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Distanza km')
+network_connection = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='connection')
 existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Existing_capacities")
 node_names = network_location.index.astype(str).tolist()
 
@@ -141,7 +142,7 @@ connection = pd.read_csv(input_data_path / "period1" / "network_topology" / "exi
 for node_x in node_names:
     for node_y in node_names:
         if node_x != node_y:
-            connection.loc[node_x, node_y] = 1
+            connection.loc[node_x, node_y] = network_connection.at[node_x, node_y]
 connection.to_csv(input_data_path / "period1" / "network_topology" / "existing" / "electricityOnshore" / "connection.csv", sep=";")
 print("Connection:", connection)
 
@@ -194,7 +195,7 @@ connection = pd.read_csv(input_data_path / "period1" / "network_topology" / "new
 for node_x in node_names:
     for node_y in node_names:
         if node_x != node_y:
-            connection.loc[node_x, node_y] = 1
+            connection.loc[node_x, node_y] = network_connection.at[node_x, node_y]
 connection.to_csv(input_data_path / "period1" / "network_topology" / "new" / "electricityOnshore" / "connection.csv", sep=";")
 print("Connection:", connection)
 

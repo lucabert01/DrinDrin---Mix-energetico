@@ -10,11 +10,11 @@
                 "costs_emissionlimit",
                 "pareto"
             ],
-            "value": "costs"
+            "value": "costs_emissionlimit"
         },
         "emission_limit": {
             "description": "emission limit to be enforced if objective function is costs_emissionlimit",
-            "value": 0
+            "value": 20000000
         },
         "monte_carlo": {
             "N": {

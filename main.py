@@ -3,28 +3,22 @@ import json
 from pathlib import Path
 import os
 import pandas as pd
-from utilities.process_data import (
-    transmission_capacity_into_matrix,
-    import_hydro_inflows,
-    update_technology_capex,
-    update_technology_opex,
-    update_carriers_cost,
-    update_nuclear_coal_cost,
-    update_demand,
-    update_el_import_data,
-    update_el_export_data,
-    set_carbon_tax,
-)
+from utilities.process_data import *
 from adopt_net0.data_preprocessing import load_climate_data_from_api
+"""
+# Sviluppo di mix energetico ottimale per Italia. 
+Assunzioni importanti: 
+1) import/export con estero possibili sempre in base alla capacità di trasmissione installata 
+2) prezzo di import e export sono uguali (100 EUR/MWh tentative) 
+"""
 
-# Sviluppo di mix energetico ottimale per Italia. Assunzioni importanti: 1) import/export con estero possibili sempre
-# in base alla capacità di trasmissione installata 2) prezzo di import e export sono uguali (100 EUR/MWh tentative)
-
+# TODO aggiungi opzione glpk
 # parametri scenario
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
 max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
-carbon_tax = 0
+carbon_tax = 100
+emission_limit = 20*10**6 #tCO2/year
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -39,16 +33,16 @@ path_files_technologies = Path("./files_tecnologie")
 path_data_case_study = Path("./dati_casoStudioItalia")
 transmission_capacity_into_matrix(ref_year_network)
 # NOTE: !network capacities are modified to make them symmetrical!
-network_capacities = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Capacità_trans_ MW_monodir')
-network_location = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Info geografiche')
-network_distances = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='Distanza km')
-network_connection = pd.read_excel(path_data_case_study/"network_data/capacities_distances_v1.xlsx", index_col=0, sheet_name='connection')
+network_data = read_input_network_data(path_data_case_study)
+network_capacities = network_data["network_capacities"]
+network_location = network_data["network_location"]
+network_distances = network_data["network_distances"]
+network_connection = network_data["network_connection"]
 existing_generation_capacity = pd.read_excel(path_data_case_study/"installed_capacity/generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Existing_capacities")
 node_names = network_location.index.astype(str).tolist()
 
 # Update technology costs
-update_technology_capex(path_files_technologies)
-update_technology_opex(path_files_technologies)
+update_technology_costs(path_files_technologies)
 update_nuclear_coal_cost(path_files_technologies)
 
 # Load json template
@@ -69,7 +63,11 @@ with open(input_data_path / "ConfigModel.json", "r") as json_file:
     configuration = json.load(json_file)
 # Set MILP gap
 configuration["solveroptions"]["mipgap"]["value"] = 0.02
-# Save json template
+# Change objective
+configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
+# Set emission limit:
+configuration["optimization"]["emission_limit"]["value"] = emission_limit
+
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
     json.dump(configuration, json_file, indent=4)
 

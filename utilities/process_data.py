@@ -2,8 +2,24 @@ import pandas as pd
 from pathlib import Path
 import json
 import adopt_net0 as adopt
+import pandas as pd
 
+def read_input_network_data(path_data_case_study):
+    # Define the path and sheets to load
+    file_path = path_data_case_study / "network_data/capacities_distances_v1.xlsx"
+    sheet_mapping = {
+        "network_capacities": "Capacità_trans_ MW_monodir",
+        "network_location": "Info geografiche",
+        "network_distances": "Distanza km",
+        "network_connection": "connection"
+    }
 
+    # Load all sheets into a dictionary
+    network_data = {
+        key: pd.read_excel(file_path, index_col=0, sheet_name=sheet)
+        for key, sheet in sheet_mapping.items()
+    }
+    return network_data
 def transmission_capacity_into_matrix(anno):
    """"
    funzione per riscrivere i dati di capacità di trasmissione interna in forma matriciale nel foglio
@@ -54,27 +70,13 @@ def import_hydro_inflows(input_data_path):
         climate_data["Hydro_Reservoir_inflow"] = hydro_inflows_hourly[node].values
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
-def update_technology_capex(path_files_technologies):
-   path = Path("./dati_casoStudioItalia")
-   capex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
 
-   for json_file_path in Path(path_files_technologies).glob("*.json"):
-      tech = json_file_path.stem  # Get the filename without .json extension
 
-      with open(json_file_path, "r") as json_file:
-         tec_data = json.load(json_file)
-
-      if tech in capex_data.index:
-         tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
-
-         with open(json_file_path, "w") as json_file:
-            json.dump(tec_data, json_file, indent=4)
-      else:
-         print(f"Warning: {tech} not found in CAPEX data.")
-
-def update_technology_opex(path_files_technologies):
+def update_technology_costs(path_files_technologies):
    path = Path("./dati_casoStudioItalia")
    opex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="OPEX")
+   discount_rate_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="discount_rate")
+   capex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
 
    for json_file_path in Path(path_files_technologies).glob("*.json"):
       tech = json_file_path.stem  # Get the filename without .json extension
@@ -84,11 +86,13 @@ def update_technology_opex(path_files_technologies):
 
       if tech in opex_data.index:
          tec_data["Economics"]["OPEX_fixed"] = float(opex_data.loc[tech, "OPEX"])
+         tec_data["Economics"]["discount_rate"] = float(discount_rate_data.loc[tech, "discount_rate"])
+         tec_data["Economics"]["unit_CAPEX"] = float(capex_data.loc[tech, "CAPEX"])
 
          with open(json_file_path, "w") as json_file:
             json.dump(tec_data, json_file, indent=4)
       else:
-         print(f"Warning: {tech} not found in OPEX data.")
+         print(f"Warning: {tech} not found in CAPEX, OPEX or discount rate data.")
 
 def update_nuclear_coal_cost(path_files_technologies):
    """

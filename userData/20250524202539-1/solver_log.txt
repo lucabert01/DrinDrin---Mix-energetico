@@ -1,0 +1,49 @@
+
+Gurobi 12.0.1 (win64) logging started Sat May 24 22:03:22 2025
+
+Set parameter LogFile to value "userData\20250524202539-1\solver_log.txt"
+Set parameter TimeLimit to value 36000
+Set parameter MIPGap to value 0.02
+Set parameter MIPFocus to value 0
+Set parameter Threads to value 0
+Set parameter NodefileStart to value 60
+Set parameter Method to value -1
+Set parameter Heuristics to value 0.05
+Set parameter Presolve to value -1
+Set parameter BranchDir to value 0
+Set parameter LPWarmStart to value 0
+Set parameter IntFeasTol to value 1e-05
+Set parameter FeasibilityTol to value 1e-06
+Set parameter Cuts to value -1
+Set parameter NumericFocus to value 0
+Gurobi Optimizer version 12.0.1 build v12.0.1rc0 (win64 - Windows 10.0 (19045.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-1255U, instruction set [SSE2|AVX|AVX2]
+Thread count: 10 physical cores, 12 logical processors, using up to 12 threads
+
+Non-default parameters:
+TimeLimit  36000
+MIPGap  0.02
+LPWarmStart  0
+NodefileStart  60
+
+Optimize a model with 14980482 rows, 12037024 columns and 32091675 nonzeros
+Model fingerprint: 0x8d5fe5fe
+Variable types: 10810526 continuous, 1226498 integer (1103844 binary)
+Coefficient statistics:
+  Matrix range     [8e-06, 9e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [2e-01, 3e+11]
+  RHS range        [8e-01, 4e+10]
+Warning: Model contains large matrix coefficient range
+Warning: Model contains large rhs
+Warning: Model contains large bounds
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+
+Explored 0 nodes (0 simplex iterations) in 7.55 seconds (4.32 work units)
+Thread count was 1 (of 12 available processors)
+
+Solution count 0
+
+Best objective -, best bound -, gap -

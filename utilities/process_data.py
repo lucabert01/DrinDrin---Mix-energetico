@@ -133,29 +133,26 @@ def update_carriers_cost(input_data_path, fuels_available, node_names):
             adopt.fill_carrier_data(input_data_path, value_or_data=500000, columns=['Import limit'], carriers=[fuel],
                                  nodes=[node])
 
-def update_el_import_data(input_data_path, node_names):
+def update_transmission_abroad_data(input_data_path, node_names, italy_as_an_island):
    path = Path("./dati_casoStudioItalia")
-   el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
-
+   el_transmission_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
    for node in node_names:
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Import limit'],
-                              carriers=["electricity"],
-                              nodes=[node])
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Import price'],
-                              carriers=["electricity"],
-                              nodes=[node])
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "emission_factor_t/MWh"]), columns=['Import emission factor'],
-                              carriers=["electricity"],
-                              nodes=[node])
-def update_el_export_data(input_data_path, node_names):
-   path = Path("./dati_casoStudioItalia")
-   el_import_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
+      capacity = 0 if italy_as_an_island else el_transmission_data.loc[node, "Capacity"]
 
-   for node in node_names:
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "capacity"]), columns=['Export limit'],
+      adopt.fill_carrier_data(input_data_path, value_or_data=capacity, columns=['Import limit'],
                               carriers=["electricity"],
                               nodes=[node])
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_import_data.loc[node, "price"]), columns=['Export price'],
+      adopt.fill_carrier_data(input_data_path, value_or_data=capacity, columns=['Export limit'],
+                              carriers=["electricity"],
+                              nodes=[node])
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "price"]), columns=['Import price'],
+                              carriers=["electricity"],
+                              nodes=[node])
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "price"]),
+                              columns=['Export price'],
+                              carriers=["electricity"],
+                              nodes=[node])
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "emission_factor_t/MWh"]), columns=['Import emission factor'],
                               carriers=["electricity"],
                               nodes=[node])
       adopt.fill_carrier_data(input_data_path, value_or_data=0, columns=['Export emission factor'],

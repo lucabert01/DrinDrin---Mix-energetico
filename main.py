@@ -18,7 +18,8 @@ ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
 max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 100
-emission_limit = 20*10**6 #tCO2/year
+emission_limit = 10*10**6 #tCO2/year
+italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -231,8 +232,7 @@ with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json
 # Aggiorna costi tecnologie in base al file excel "altri_dati"
 update_carriers_cost(input_data_path, topology["carriers"], node_names)
 # Leggi dati di import/export con estero
-update_el_import_data(input_data_path, node_names)
-update_el_export_data(input_data_path, node_names)
+update_transmission_abroad_data(input_data_path, node_names, italy_as_an_island)
 # Aggiungi carbon tax
 set_carbon_tax(input_data_path, node_names, carbon_tax)
 # Leggi profili di domanda orari

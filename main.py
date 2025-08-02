@@ -8,8 +8,8 @@ from adopt_net0.data_preprocessing import load_climate_data_from_api
 """
 # Sviluppo di mix energetico ottimale per Italia. 
 Assunzioni importanti: 
-1) import/export con estero possibili sempre in base alla capacità di trasmissione installata 
-2) prezzo di import e export sono uguali (100 EUR/MWh tentative) 
+1) import/export con estero possibili in base alla capacità di trasmissione installata 
+2) prezzo di import fisso (100 EUR/MWh), prezzo di export nullo (0 EUR/MWh) + 0 emission factor
 """
 
 # TODO aggiungi opzione glpk
@@ -17,8 +17,8 @@ Assunzioni importanti:
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
 max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
-carbon_tax = 100
-emission_limit = 10*10**6 #tCO2/year
+carbon_tax = 0
+emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
 
 # Create folder for results
@@ -222,9 +222,9 @@ adopt.copy_network_data(input_data_path)
 
 with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "r") as json_file:
     network_data = json.load(json_file)
-#TODO aggiungi parametri (costi) network corretti
-network_data["Economics"]["gamma2"] = 40000
-network_data["Economics"]["gamma4"] = 300
+network_data["Economics"]["gamma1"] = 300000000
+network_data["Economics"]["gamma2"] = 200000
+network_data["Economics"]["gamma4"] = 3333
 
 with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "w") as json_file:
     json.dump(network_data, json_file, indent=4)

@@ -16,11 +16,12 @@ Assunzioni importanti:
 # parametri scenario
 ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
-max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
+max_new_trasmission_capacity = 10000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
-green_field_hydro_only = 1 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
+green_field_hydro_only = 0 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
+n_design_days = 10
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -70,7 +71,7 @@ configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
 # Set emission limit:
 configuration["optimization"]["emission_limit"]["value"] = emission_limit
 # typical days algorithm to simplify the problem
-configuration['optimization']['typicaldays']['N']['value'] = 10
+configuration['optimization']['typicaldays']['N']['value'] = n_design_days
 configuration['optimization']['typicaldays']['method']['value'] = 2
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
@@ -117,8 +118,11 @@ for node in node_names:
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "r") as json_file:
         technologies = json.load(json_file)
     technologies["new"] = technologies_per_node[node]["new"]
-    technologies["existing"] = {tech: float(existing_generation_capacity.loc[tech, node])
-                                for tech in technologies_per_node[node]["existing"]}
+    technologies["existing"] = {
+        tech: float(existing_generation_capacity.loc[tech, node])
+        for tech in technologies_per_node[node]["existing"]
+        if float(existing_generation_capacity.loc[tech, node]) > 0
+    }
 
     with open(input_data_path / "period1" / "node_data" / node / "Technologies.json", "w") as json_file:
         json.dump(technologies, json_file, indent=4)

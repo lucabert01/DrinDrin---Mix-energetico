@@ -20,6 +20,7 @@ max_new_trasmission_capacity = 30000 # massima capacita' di trasmissione install
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
+green_field_hydro_only = 1 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -68,6 +69,9 @@ configuration["solveroptions"]["mipgap"]["value"] = 0.02
 configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
 # Set emission limit:
 configuration["optimization"]["emission_limit"]["value"] = emission_limit
+# typical days algorithm to simplify the problem
+configuration['optimization']['typicaldays']['N']['value'] = 10
+configuration['optimization']['typicaldays']['method']['value'] = 2
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
     json.dump(configuration, json_file, indent=4)
@@ -96,9 +100,10 @@ existing_technologies = existing_generation_capacity.index.tolist()
 new_technologies = ([tech for tech in existing_technologies if tech not in
                     ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
                     + ["NuclearPlant"])
-new_technologies = ([tech for tech in existing_technologies if tech not in
-                    ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
-                    + ["NuclearPlant"])
+
+if green_field_hydro_only:
+    existing_technologies = ["Hydro_Reservoir", "PumpedHydro_Closed"]
+
 technologies_per_node = {}
 
 # Assigning available technologies for each node

@@ -14,7 +14,7 @@
         },
         "emission_limit": {
             "description": "emission limit to be enforced if objective function is costs_emissionlimit",
-            "value": 20000000
+            "value": 0
         },
         "monte_carlo": {
             "N": {
@@ -57,7 +57,7 @@
         "typicaldays": {
             "N": {
                 "description": "Determines number of typical days (0 = off).",
-                "value": 0
+                "value": 10
             },
             "method": {
                 "description": "Determine method used for modeling technologies with typical days.",
@@ -73,7 +73,7 @@
                 "value": [
                     "RES",
                     "STOR",
-                    "Hydro_Open"
+                    "HydroOpen"
                 ]
             }
         },

@@ -67,7 +67,7 @@ def import_hydro_inflows(input_data_path):
                 input_data_path / "period1" / "node_data" / node / "ClimateData.csv"
         )
         climate_data = pd.read_csv(climate_data_file)
-        climate_data["Hydro_Reservoir_inflow"] = hydro_inflows_hourly[node].values
+        climate_data["Hydro_Reservoir_existing_inflow"] = hydro_inflows_hourly[node].values
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
 

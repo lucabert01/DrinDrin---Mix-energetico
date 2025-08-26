@@ -70,7 +70,7 @@ configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
 # Set emission limit:
 configuration["optimization"]["emission_limit"]["value"] = emission_limit
 # typical days algorithm to simplify the problem
-configuration['optimization']['typicaldays']['N']['value'] = 10
+configuration['optimization']['typicaldays']['N']['value'] = 0
 configuration['optimization']['typicaldays']['method']['value'] = 2
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
@@ -249,5 +249,5 @@ load_climate_data_from_api(folder_path=input_data_path)
 
 # Build and solve optimization problem
 m = adopt.ModelHub()
-m.read_data(input_data_path)
+m.read_data(input_data_path, start_period=1, end_period=24)
 m.quick_solve()

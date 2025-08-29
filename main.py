@@ -20,8 +20,8 @@ max_new_trasmission_capacity = 10000 # massima capacita' di trasmissione install
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
-green_field_hydro_only = 0 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
-n_design_days = 10
+green_field_hydro_only = 1 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
+n_design_days = 0
 
 # Create folder for results
 results_data_path = Path("./userData")
@@ -71,7 +71,7 @@ configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
 # Set emission limit:
 configuration["optimization"]["emission_limit"]["value"] = emission_limit
 # typical days algorithm to simplify the problem
-configuration['optimization']['typicaldays']['N']['value'] = 10
+configuration['optimization']['typicaldays']['N']['value'] = n_design_days
 configuration['optimization']['typicaldays']['method']['value'] = 2
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
@@ -253,5 +253,5 @@ load_climate_data_from_api(folder_path=input_data_path)
 
 # Build and solve optimization problem
 m = adopt.ModelHub()
-m.read_data(input_data_path, start_period=1, end_period=24)
+m.read_data(input_data_path)
 m.quick_solve()

@@ -1,7 +1,7 @@
 {
     "tec_type": "RES",
     "size_min": 0,
-    "size_max": 10000,
+    "size_max": 100000,
     "size_is_int": 0,
     "decommission": 0,
     "Economics": {
@@ -10,8 +10,8 @@
         "unit_CAPEX": 676570.2999999999,
         "fix_CAPEX": 0,
         "OPEX_variable": 16.937521,
-        "OPEX_fixed": 0.04,
-        "discount_rate": 0.1,
+        "OPEX_fixed": 0.017275,
+        "discount_rate": 0.057,
         "lifetime": 20,
         "decommission_cost": 0
     },

@@ -1,11 +1,11 @@
 {
     "tec_type": "HydroOpen",
     "size_min": 0,
-    "size_max": 10000000.0,
+    "size_max": 50000000.0,
     "size_is_int": 0,
-    "decommission": 0,
+    "decommission": "impossible",
     "Economics": {
-        "comment": "CAPEX in EUR/MWh or as a piecewise function, OPEX_variable in EUR/MWh total output, OPEX_fixed in % of CAPEX_annual",
+        "comment": "CAPEX in EUR/MWh or as a piecewise function, opex_variable in EUR/MWh total output, opex_fixed in % of up-front CAPEX",
         "CAPEX_model": 1,
         "unit_CAPEX": 2593292.178,
         "fix_CAPEX": 0,
@@ -14,8 +14,8 @@
             "bp_y": "not defined"
         },
         "OPEX_variable": 0,
-        "OPEX_fixed": 0.04,
-        "discount_rate": 0.1,
+        "OPEX_fixed": 0.01,
+        "discount_rate": 0.052,
         "lifetime": 50,
         "decommission_cost": 0
     },
@@ -34,10 +34,10 @@
         "maximum_discharge_time_discrete": 0,
         "performance": {
             "eta_in": 0.96,
-            "eta_out": 0.9,
+            "eta_out": 0.96,
             "lambda": 0,
-            "charge_max": 0.2,
-            "discharge_max": 0.2,
+            "charge_max": 0,
+            "discharge_max": 0.002726,
             "spilling_max": 1
         }
     },

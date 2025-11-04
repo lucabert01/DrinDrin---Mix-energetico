@@ -1,12 +1,6 @@
 {
     "existing": {
-        "Hydro_Reservoir": 18410.0,
-        "GasTurbine_simple": 3682.0,
-        "Photovoltaic": 847.0,
-        "WindTurbine_Onshore_1500": 1249.0,
-        "CoalPlant": 21.0,
-        "Storage_Battery": 271.0,
-        "PumpedHydro_Closed": 0.0
+        "Hydro_Reservoir": 323514.77969882876
     },
     "new": [
         "GasTurbine_simple",

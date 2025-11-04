@@ -14,8 +14,8 @@
             "bp_y": "not defined"
         },
         "OPEX_variable": 0,
-        "OPEX_fixed": 0.04,
-        "discount_rate": 0.1,
+        "OPEX_fixed": 0.0043,
+        "discount_rate": 0.052,
         "lifetime": 50,
         "decommission_cost": 0
     },
@@ -30,6 +30,7 @@
         ],
         "emission_factor": 0,
         "allow_only_one_direction": 1,
+        "allow_only_one_direction_precise": 0,
         "performance": {
             "eta_in": 0.85,
             "eta_out": 0.85,

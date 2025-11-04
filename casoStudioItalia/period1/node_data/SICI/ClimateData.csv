@@ -1,4 +1,4 @@
-";ghi;dni;dhi;temp_air;rh;ws10;TECHNOLOGYNAME_hydro_inflow";Hydro_Reservoir_inflow;ghi;dni;dhi;temp_air;rh;ws10
+";ghi;dni;dhi;temp_air;rh;ws10;TECHNOLOGYNAME_hydro_inflow";Hydro_Reservoir_existing_inflow;ghi;dni;dhi;temp_air;rh;ws10
 "2022-01-01 00:00:00;;;;;;;";0.0;0.0;0.0;0.0;9.55;66.62;3.83
 "2022-01-01 01:00:00;;;;;;;";0.0;0.0;0.0;0.0;9.49;67.0;3.79
 "2022-01-01 02:00:00;;;;;;;";0.0;0.0;0.0;0.0;9.43;67.38;3.75

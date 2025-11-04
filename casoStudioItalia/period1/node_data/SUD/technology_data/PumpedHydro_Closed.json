@@ -14,8 +14,8 @@
             "bp_y": "not defined"
         },
         "OPEX_variable": 0,
-        "OPEX_fixed": 0.04,
-        "discount_rate": 0.1,
+        "OPEX_fixed": 0.0043,
+        "discount_rate": 0.052,
         "lifetime": 50,
         "decommission_cost": 0
     },
@@ -53,5 +53,4 @@
         "output_carrier": {
             "electricity": "MW"
         }
-    }
-}
+    

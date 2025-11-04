@@ -14,7 +14,7 @@ Assunzioni importanti:
 
 # TODO aggiungi opzione glpk
 # parametri scenario
-ref_year_network = 2023 # scelta possibile tra [2023, 2030,2035, 2040]
+ref_year_network = 2030 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
 max_new_trasmission_capacity = 10000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
@@ -22,10 +22,24 @@ emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
 green_field_hydro_only = 1 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
 n_design_days = 0
+if green_field_hydro_only:
+    field_type = "GreenFieldHydro"
+else:
+    field_type = "BrownField"
+if italy_as_an_island:
+    island = "Island"
+else:
+    island = "NotIsland"
+
+name_case_study = f"{field_type}_{island}"
+
+#Define basepath
+basepath = os.path.dirname(os.path.abspath(__file__))
+
 
 # Create folder for results
-results_data_path = Path("./userData")
-results_data_path.mkdir(parents=True, exist_ok=True)
+results_data_path = "./rawResults"
+
 # Create input data path and optimization templates
 input_data_path = Path("./casoStudioItalia")
 input_data_path.mkdir(parents=True, exist_ok=True)
@@ -73,6 +87,9 @@ configuration["optimization"]["emission_limit"]["value"] = emission_limit
 # typical days algorithm to simplify the problem
 configuration['optimization']['typicaldays']['N']['value'] = n_design_days
 configuration['optimization']['typicaldays']['method']['value'] = 2
+configuration['reporting']['save_summary_path']['value'] = results_data_path
+configuration['reporting']['save_path']['value'] = results_data_path
+configuration['reporting']['case_name']['value'] = name_case_study
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
     json.dump(configuration, json_file, indent=4)
@@ -253,5 +270,5 @@ load_climate_data_from_api(folder_path=input_data_path)
 
 # Build and solve optimization problem
 m = adopt.ModelHub()
-m.read_data(input_data_path)
+m.read_data(input_data_path, start_period=0, end_period=8760)
 m.quick_solve()

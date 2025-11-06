@@ -16,7 +16,7 @@ Assunzioni importanti:
 # parametri scenario
 ref_year_network = 2030 # scelta possibile tra [2023, 2030,2035, 2040]
 demand_increase = 1.0 # compared to year 2024
-max_new_trasmission_capacity = 10000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
+max_new_trasmission_capacity = 15000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
@@ -79,7 +79,7 @@ with open(input_data_path / "Topology.json", "w") as json_file:
 with open(input_data_path / "ConfigModel.json", "r") as json_file:
     configuration = json.load(json_file)
 # Set MILP gap
-configuration["solveroptions"]["mipgap"]["value"] = 0.02
+configuration["solveroptions"]["mipgap"]["value"] = 0.03
 # Change objective
 configuration["optimization"]["objective"]["value"] = "costs_emissionlimit"
 # Set emission limit:

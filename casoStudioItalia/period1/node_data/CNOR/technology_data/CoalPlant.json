@@ -14,8 +14,8 @@
             "bp_y": "not defined"
         },
         "OPEX_variable": 10.331146370574086,
-        "OPEX_fixed": 0.04,
-        "discount_rate": 0,
+        "OPEX_fixed": 0.016316,
+        "discount_rate": 0.062,
         "lifetime": 1,
         "decommission_cost": 0
     },

@@ -68,8 +68,24 @@ for idx, node in enumerate(nodes):
     plt.plot(battery_output.index, battery_output.values, label=node, color=colors[idx])
 
 plt.title("Battery Electricity Output Over Time")
-plt.xlabel("Time")
-plt.ylabel("Electricity Output")
+plt.xlabel("Time [h]")
+plt.ylabel("Electricity Output [MW]")
+plt.legend()
+
+# Battery input
+
+plt.figure(figsize=(12, 6))
+
+# Automatically assign colors from the colormap
+colors = cmc.vik(np.linspace(0, 1, len(nodes)))
+
+for idx, node in enumerate(nodes):
+    battery_input = results_summary[node]["battery_operation"]['electricity_input']
+    plt.plot(battery_input.index, battery_input.values, label=node, color=colors[idx])
+
+plt.title("Battery Electricity input Over Time")
+plt.xlabel("Time [h]")
+plt.ylabel("Electricity input [MW]")
 plt.legend()
 
 

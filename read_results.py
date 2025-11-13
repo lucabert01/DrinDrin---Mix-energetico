@@ -11,6 +11,8 @@ import numpy as np
 import warnings
 import seaborn as sns
 import cmcrameri.cm as cmc
+from utilities.report_utils import ReportBuilder
+
 
 plt.style.use("seaborn-v0_8-whitegrid")
 
@@ -23,7 +25,9 @@ batlow_colors = ['#222A6A', '#4B708A', '#6FBC7B', '#B1E87E', '#F7D03C', '#D491B8
 raw_results_path = Path("./rawResults")
 # Paste here the directory of the h5 file
 file_path = raw_results_path / f"20251105122925_GreenFieldHydro_Island-1/optimization_results.h5"
-
+# Create report for saving results
+report_name = file_path.parent.name
+report = ReportBuilder(title=report_name)
 
 with h5py.File(file_path, 'r') as hdf_file:
     df_operation = pd.DataFrame(extract_datasets_from_h5group(hdf_file["operation"]))
@@ -71,6 +75,7 @@ plt.title("Battery Electricity Output Over Time")
 plt.xlabel("Time [h]")
 plt.ylabel("Electricity Output [MW]")
 plt.legend()
+report.add_figure(plt.gcf(), comment="Battery output comparison across nodes")
 
 # Battery input
 
@@ -87,6 +92,7 @@ plt.title("Battery Electricity input Over Time")
 plt.xlabel("Time [h]")
 plt.ylabel("Electricity input [MW]")
 plt.legend()
+report.add_figure(plt.gcf(), comment="Battery input comparison across nodes")
 
 
 # --- Average exchanges and build matrix ---
@@ -113,7 +119,11 @@ plt.title("Average Electricity Exchange (MW)")
 plt.xlabel("To node")
 plt.ylabel("From node")
 plt.tight_layout()
+report.add_figure(plt.gcf(), comment="Heat map of average electricity exchange among nodes")
 
 
 # Show figures
 plt.show()
+
+# Save report
+report.save(f"resultsReports/{report_name}_Report.pdf")

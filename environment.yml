@@ -1,0 +1,25 @@
+name: drindin-mix-energetico
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Python
+  - python=3.12
+  
+  # Data handling and analysis
+  - pandas
+  - numpy
+  - h5py
+  
+  # Plotting and visualization
+  - matplotlib
+  - seaborn
+  
+  # Scientific computing
+  - scipy
+  
+  # Additional packages for colormap
+  - pip
+  - pip:
+    - cmcrameri
+    - adopt_net0

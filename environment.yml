@@ -10,6 +10,7 @@ dependencies:
   - pandas
   - numpy
   - h5py
+  - pyxlsb
   
   # Plotting and visualization
   - matplotlib

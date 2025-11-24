@@ -12,7 +12,7 @@
         "OPEX_variable": 16.937521,
         "OPEX_fixed": 0.017275,
         "discount_rate": 0.057,
-        "lifetime": 20,
+        "lifetime": 25,
         "decommission_cost": 0
     },
     "Performance": {

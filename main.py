@@ -14,9 +14,14 @@ Assunzioni importanti:
 
 # TODO aggiungi opzione glpk
 # parametri scenario
-ref_year_network = 2030 # scelta possibile tra [2023, 2030,2035, 2040]
-demand_increase = 1.0 # compared to year 2024
-max_new_trasmission_capacity = 15000 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
+ref_year = 2040 # scelta possibile per la rete di trasmissione tra [2023, 2030,2035, 2040]
+demand_increase_options = {
+    "2023": 1,
+    "2030": 1.08,
+    "2035": 1.16,
+    "2040": 1.24}# compared to year 2024. data for 2040 is from TYNDP, 2030 and 3035 are interpolated
+demand_increase = demand_increase_options[f"{ref_year}"]
+max_new_trasmission_capacity = 0 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
 italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
@@ -31,7 +36,7 @@ if italy_as_an_island:
 else:
     island = "NotIsland"
 
-name_case_study = f"{field_type}_{island}"
+name_case_study = f"{field_type}_{island}_{ref_year}"
 
 #Define basepath
 basepath = os.path.dirname(os.path.abspath(__file__))
@@ -48,7 +53,7 @@ adopt.create_optimization_templates(input_data_path)
 # Import data
 path_files_technologies = Path("./files_tecnologie")
 path_data_case_study = Path("./dati_casoStudioItalia")
-transmission_capacity_into_matrix(ref_year_network)
+transmission_capacity_into_matrix(ref_year)
 # NOTE: !network capacities are modified to make them symmetrical!
 network_data = read_input_network_data(path_data_case_study)
 network_capacities = network_data["network_capacities"]
@@ -90,6 +95,8 @@ configuration['optimization']['typicaldays']['method']['value'] = 2
 configuration['reporting']['save_summary_path']['value'] = results_data_path
 configuration['reporting']['save_path']['value'] = results_data_path
 configuration['reporting']['case_name']['value'] = name_case_study
+configuration["solveroptions"]["timelim"]["value"] = 24*10 # set MILP gap
+
 
 with open(input_data_path / "ConfigModel.json", "w") as json_file:
     json.dump(configuration, json_file, indent=4)
@@ -244,7 +251,7 @@ os.remove(input_data_path / "period1" / "network_topology" / "new" / "distance.c
 os.remove(input_data_path / "period1" / "network_topology" / "new" / "size_max_arcs.csv")
 
 # Copy network data and change costs
-adopt.copy_network_data(input_data_path)
+adopt.copy_network_data(input_data_path, path_files_technologies)
 
 with open(input_data_path / "period1" / "network_data"/ "electricityOnshore.json", "r") as json_file:
     network_data = json.load(json_file)

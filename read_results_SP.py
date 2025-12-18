@@ -2,8 +2,7 @@ import h5py
 from pathlib import Path
 from adopt_net0.result_management.read_results import (
     print_h5_tree,
-    extract_datasets_from_h5group,
-)
+    extract_datasets_from_h5group,)
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
@@ -44,6 +43,8 @@ with h5py.File(file_path, "r") as f, open(output_txt, "w") as out_file:
 with h5py.File(file_path, 'r') as hdf_file:
     df_operation = pd.DataFrame(extract_datasets_from_h5group(hdf_file["operation"]))
     df_design = pd.DataFrame(extract_datasets_from_h5group(hdf_file["design/nodes/period1"]))
+    #df_operation.to_excel('operation.xlsx')
+    #df_design.to_excel('design.xlsx')
     nodes = list(hdf_file["operation/energy_balance/period1"].keys())
     network_technologies = list(hdf_file["operation/networks/period1"].keys())
     # get the exchange of electricity through networks
@@ -567,6 +568,41 @@ with h5py.File(file_path, 'r') as hdf_file:
         dict_tech_nodes_size[tech] =  dict_node_size
 
 
+df = pd.DataFrame.from_dict(dict_tech_nodes_size, orient="index")
+df = df.reindex(columns=desired_order)
+# scala e arrotonda
+df = (df / 1000).round(1)
+
+# -----------------------------
+# Create table figure
+# -----------------------------
+fig, ax = plt.subplots(figsize=(10, max(2, 0.35 * len(df))))
+ax.axis('off')
+
+table = ax.table(
+    cellText=df.values,
+    colLabels=df.columns,
+    rowLabels=df.index,
+    cellLoc='center',
+    loc='center'
+)
+
+table.auto_set_font_size(False)
+table.set_fontsize(8)
+table.scale(1, 0.9)
+
+plt.tight_layout()
+
+# -----------------------------
+# Add to report
+# -----------------------------
+report.add_figure(
+    fig,
+    comment="Installato per tecnologia e zona GW o GWh"
+)
+
+
+
 sum_size_per_tech = {tech: np.sum(list(nodes.values())) for tech, nodes in  dict_tech_nodes_size.items()}
                      
 dict_heq_per_tech={}
@@ -625,7 +661,7 @@ ax1.set_xticklabels(labels, rotation=30, ha="right")
 plt.tight_layout()
 plt.show()
 
-report.add_figure(fig, comment="Ore equivalenti/numero di cili medio per tecnologia")
+report.add_figure(fig, comment="Ore equivalenti/numero di cicli medio per tecnologia")
 
 
 
@@ -665,23 +701,70 @@ df = df.reindex(columns=new_order, fill_value=0)
 # -----------------------------
 # Plot heatmap
 # -----------------------------
-plt.figure(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(10, 6))
+
 sns.heatmap(
     df,
     annot=True,
     fmt=".1f",
     cmap=cmc.vik,
-    cbar_kws={"label": "heq"}
+    cbar_kws={"label": "heq"},
+    ax=ax
 )
 
-plt.title("Ore equivalenti per tecnologia e zona")
-plt.xlabel("Nodo")
-plt.ylabel("Tecnologia")
-plt.tight_layout()
+ax.set_title("Ore equivalenti per tecnologia e zona")
+ax.set_xlabel("Nodo")
+ax.set_ylabel("Tecnologia")
+
+fig.tight_layout()
 plt.show()
-
-
+# -----------------------------
+# Add to report
+# -----------------------------
 report.add_figure(fig, comment="Ore equivalenti per tecnologia e zona")
 
+
+#conta il numero di cicli delle BESS come numero di volte che il livello di carica passa da x=0 a x>0
+with h5py.File(file_path, 'r') as hdf_file:
+        dict_node_BESS_n_cycles = {}
+        for node in nodes:
+            BESS_level_path = f"operation/technology_operation/period1/{node}/Storage_Battery/storage_level"
+            if BESS_level_path in hdf_file:
+                storage_level = hdf_file[BESS_level_path][:]
+                zero_positions = np.where(np.abs(storage_level) == 0)[0]
+                valid_zeros = zero_positions[zero_positions < len(storage_level) - 1]
+                next_values = storage_level[valid_zeros + 1]
+                transitions = next_values > 0
+                n_transitions = np.sum(transitions)
+                dict_node_BESS_n_cycles[node] = n_transitions
+
+
+filtered_data = {k: v for k, v in dict_node_BESS_n_cycles.items() if v != 0}
+
+fig, ax = plt.subplots()
+
+bars = ax.bar(filtered_data.keys(), filtered_data.values())
+ax.set_xlabel("Zona")
+ax.set_title("numero di volte in cui le BESS passano da SOC=0 a SOC>0 per zona")
+
+# valore in cima alle barre
+for bar in bars:
+    height = bar.get_height()
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        height,
+        f"{int(height)}",
+        ha="center",
+        va="bottom"
+    )
+plt.show()
+# aggiunta al report
+report.add_figure(fig, comment="numero di volte in cui le BESS passano da SOC=0 a SOC>0 per zona")
+
+      
 os.makedirs('resultsReports', exist_ok =True)
 report.save(f"resultsReports/{report_name}_Report.pdf")
+
+
+
+#tabella risultati installato

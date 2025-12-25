@@ -256,6 +256,7 @@ df_balanceTechsITA["Hour"]=df_balanceTechsITA["period"]%24
 df_balanceTechsITA["month"]=((df_balanceTechsITA["Day"]-1)//30)+1
 df_balanceTechsITA.loc[df_balanceTechsITA["month"]>12,"month"]=12
 
+
 #calcoloil giorno medio italiano
 df_meanDay=df_balanceTechsITA.groupby("Hour").agg({'demand':'mean', 'export':'mean', 'import':'mean', 'network_inflow':'mean',
        'network_outflow':'mean', 'GAS_PLANT_OUT':'mean', 'Hydro_IN':'mean', 'Hydro_OUT':'mean',
@@ -762,9 +763,125 @@ plt.show()
 report.add_figure(fig, comment="numero di volte in cui le BESS passano da SOC=0 a SOC>0 per zona")
 
       
+
+
+
+# funzione per creare day_of_month
+def compute_day_of_month(group):
+    n = len(group)
+    group = group.copy()
+    group['day_of_month'] = (np.arange(n) // 24) + 1
+    return group
+
+# applico mese per mese
+df_balanceTechsITA = df_balanceTechsITA.groupby('month', group_keys=False).apply(compute_day_of_month)
+
+# bilancio stagioni
+months = [2, 4, 7, 10]
+
+# colonne da NON impilare
+exclude_cols = {
+    'period', 'Day', 'Hour', 'month', 'demand',
+    'PV_OUT', 'Wind_OUT', 'day_of_month', 'network_inflow', 'network_outflow', 'PV_CRUTAILMENT', 'Wind_CRUTAILMENT'
+}
+
+# mappa colori globale
+colors = plt.cm.tab20.colors
+color_map_global = {}
+
+#calcolo min/max globali
+min_global = np.inf
+max_global = -np.inf
+
+for m in months:
+    dfm = df_balanceTechsITA[(df_balanceTechsITA['month'] == m) & 
+                              (df_balanceTechsITA['day_of_month'] >= 8) &  
+                              (df_balanceTechsITA['day_of_month'] <= 14)].copy()
+    bar_cols = [c for c in dfm.columns if c not in exclude_cols]
+    if 'Nuclear_OUT' in bar_cols:
+        bar_cols.remove('Nuclear_OUT')
+        bar_cols = ['Nuclear_OUT'] + bar_cols
+
+    # split positivo/negativo
+    pos = dfm[bar_cols].clip(lower=0)
+    neg = dfm[bar_cols].clip(upper=0)
+
+    # min/max considerando positive + negative + demand
+    min_local = min(neg.sum(axis=1).min(), dfm['demand'].min())
+    max_local = max(pos.sum(axis=1).max(), dfm['demand'].max())
+
+    min_global = min(min_global, min_local)
+    max_global = max(max_global, max_local)
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 9))  # figura più compatta
+axes = axes.flatten()
+
+for idx, m in enumerate(months):
+    ax = axes[idx]
+
+    dfm = df_balanceTechsITA[(df_balanceTechsITA['month'] == m) & 
+                              (df_balanceTechsITA['day_of_month'] >= 8) &  
+                              (df_balanceTechsITA['day_of_month'] <= 14)].copy()
+
+    dfm['t'] = (dfm['Day'] - 8) * 24 + dfm['Hour']
+    dfm = dfm.set_index('t')
+
+    bar_cols = [c for c in dfm.columns if c not in exclude_cols]
+    if 'Nuclear_OUT' in bar_cols:
+        bar_cols.remove('Nuclear_OUT')
+        bar_cols = ['Nuclear_OUT'] + bar_cols
+
+    # aggiorno la mappa colori globale
+    for i, col in enumerate(bar_cols):
+        if col not in color_map_global:
+            color_map_global[col] = colors[i % len(colors)]
+
+    pos = dfm[bar_cols].clip(lower=0)
+    neg = dfm[bar_cols].clip(upper=0)
+    x = np.arange(len(dfm))
+
+    bottom_pos = np.zeros(len(dfm))
+    for col in bar_cols:
+        vals = pos[col].values
+        ax.bar(x, vals, bottom=bottom_pos, width=0.8, edgecolor='none', color=color_map_global[col])
+        bottom_pos += vals
+
+    bottom_neg = np.zeros(len(dfm))
+    for col in bar_cols:
+        vals = neg[col].values
+        ax.bar(x, vals, bottom=bottom_neg, width=0.8, edgecolor='none', color=color_map_global[col])
+        bottom_neg += vals
+
+    ax.plot(x, dfm['demand'].values, color='k', lw=2.5, label='demand', zorder=10)
+
+    ax.set_title(f"Mese {m} – seconda settimana", fontsize=10)
+    #ax.set_xlabel("Ora", fontsize=9)
+    ax.set_ylabel("MW", fontsize=9)
+    ax.set_xlim(-0.5, len(dfm) - 0.5)
+    ax.set_ylim(min_global -1000, max_global+1000)
+
+# Legenda unica sotto i grafici
+handles = [Line2D([0], [0], color='k', lw=2.5, label='demand')] + \
+          [Patch(facecolor=color_map_global[col], label=col) for col in bar_cols]
+
+fig.legend(handles=handles, 
+           loc='lower center', 
+           ncol=6,                  # prova 6 invece di 5: distribuisce meglio su due righe
+           bbox_to_anchor=(0.5, 0.02),  # posizionala un po' più in alto
+           fontsize=8,               # leggermente più grande per leggibilità
+           frameon=False)
+
+# IMPORTANTE: usa tight_layout con rect per riservare spazio in basso
+plt.tight_layout(rect=[0, 0.10, 1, 0.98])  # lascia ~10% in basso per la legenda
+
+plt.show()
+
+report.add_figure(fig, comment="bilancio orario nella seconda settimana di un mese per stagione")
+
+
 os.makedirs('resultsReports', exist_ok =True)
 report.save(f"resultsReports/{report_name}_Report.pdf")
 
 
 
-#tabella risultati installato
+

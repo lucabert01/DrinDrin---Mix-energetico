@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import adopt_net0 as adopt
 import pandas as pd
+import warnings
 
 def read_input_network_data(path_data_case_study):
     # Define the path and sheets to load
@@ -48,9 +49,11 @@ def import_hydro_inflows(input_data_path):
     """Importare i dati di flusso dei fiumi nei bacini idroelettrici. Per il pompaggio chiuso assumiamo 0
     visto che abbiamo assunto che tutti i flussi siano diretti ai bacini aperti"""
     data_path = Path("./dati_casoStudioItalia/Hydro inflows 2017.xlsx")
-    hydro_inflows =  pd.read_excel(data_path, sheet_name="Hydro_inflows ", index_col=0)
+    hydro_inflows =  pd.read_excel(data_path, sheet_name="Hydro_inflows", index_col=0)
     nodes = hydro_inflows.columns.tolist()
     hydro_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
+    run_of_river_inflows =  pd.read_excel(data_path, sheet_name="run_of_river", index_col=0)
+    ror_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
 
     for node in nodes:
         for week in range(0,52):
@@ -60,6 +63,11 @@ def import_hydro_inflows(input_data_path):
             hydro_inflows_hourly.loc[start_hour:end_hour - 1, node] = hydro_inflows.loc[week+1, node]*1000/168
             #add last day of the year manually
             hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]
+        for day in range(0,365):
+            start_hour = day * 24
+            end_hour = (day + 1) * 24
+            # Convert from GWh/day to MWh/h
+            ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[day + 1, node] * 1000 / 24
 
 
     for node in nodes:
@@ -70,7 +78,10 @@ def import_hydro_inflows(input_data_path):
         climate_data["Hydro_Reservoir_existing_inflow"] = hydro_inflows_hourly[node].values
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
-
+        # Add run of river production
+        adopt.fill_carrier_data(input_data_path, value_or_data=ror_inflows_hourly[node].values, columns=['Generic production'],
+                                carriers=["electricity"],
+                                nodes=[node])
 
 def update_technology_costs(path_files_technologies):
    path = Path("./dati_casoStudioItalia")
@@ -167,9 +178,23 @@ def set_carbon_tax(input_data_path, node_names, carbon_tax):
         carbon_cost_template = carbon_cost_template.reset_index()
         carbon_cost_template.to_csv(carbon_cost_path, sep=';', index=False)
 
-def update_demand(input_data_path, node_names):
+def update_demand(input_data_path, node_names, ref_year):
    path = Path("./dati_casoStudioItalia")
-   demand_data = pd.read_excel(path / "installed_capacity" / "generazione_domanda_per_zona_v02.xlsx", index_col=0, sheet_name="Demand")
+   if ref_year == 2040:
+       demand_data = pd.read_excel(path / "electrification" / "resulting_profiles_electrification.xlsx", index_col=0, sheet_name="2040")
+
+   elif ref_year == 2050:
+       demand_data = pd.read_excel(path / "electrification" / "resulting_profiles_electrification.xlsx", index_col=0,
+                                   sheet_name="2050")
+   else:
+       warnings.warn(
+           f"Electrification of demand is available only for reference years 2040 and 2050 (not for {ref_year}). "
+           f"Using demand for 2024.",
+           UserWarning
+       )
+       demand_data = pd.read_excel(path / "installed_capacity" / "generazione_domanda_per_zona_v02.xlsx", index_col=0,
+                                   sheet_name="Demand")
+
    for node in node_names:
       adopt.fill_carrier_data(input_data_path, value_or_data=demand_data.loc[:, node], columns=['Demand'], carriers=["electricity"],
                                  nodes=[node])

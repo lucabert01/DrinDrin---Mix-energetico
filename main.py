@@ -14,13 +14,8 @@ Assunzioni importanti:
 
 # TODO aggiungi opzione glpk
 # parametri scenario
-ref_year = 2040 # scelta possibile per la rete di trasmissione tra [2023, 2030,2035, 2040]
-demand_increase_options = {
-    "2023": 1,
-    "2030": 1.08,
-    "2035": 1.16,
-    "2040": 1.24}# compared to year 2024. data for 2040 is from TYNDP, 2030 and 3035 are interpolated
-demand_increase = demand_increase_options[f"{ref_year}"]
+ref_year = 2040 # scelta possibile per la rete di trasmissione tra [2023, 2030,2035, 2040];
+                # e tra [2040, 3050] per aumento domanda dovuto a elettrificazione dei consumi
 max_new_trasmission_capacity = 0 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
@@ -269,7 +264,7 @@ update_transmission_abroad_data(input_data_path, node_names, italy_as_an_island)
 # Aggiungi carbon tax
 set_carbon_tax(input_data_path, node_names, carbon_tax)
 # Leggi profili di domanda orari
-update_demand(input_data_path, node_names)
+update_demand(input_data_path, node_names, ref_year)
 # Add hydro inflows to climate data
 import_hydro_inflows(input_data_path)
 # Get climate data

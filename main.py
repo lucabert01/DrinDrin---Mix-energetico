@@ -118,11 +118,11 @@ adopt.show_available_technologies()
 existing_technologies = existing_generation_capacity.index.tolist()
 # removing hydro and coal and adding nuclear as possible new technologies
 new_technologies = ([tech for tech in existing_technologies if tech not in
-                    ["Hydro_Reservoir", "PumpedHydro_Closed", "CoalPlant"]]
+                    ["Hydro_Reservoir", "PumpedHydro_Open", "CoalPlant"]]
                     + ["NuclearPlant"])
 
 if green_field_hydro_only:
-    existing_technologies = ["Hydro_Reservoir", "PumpedHydro_Closed"]
+    existing_technologies = ["Hydro_Reservoir", "PumpedHydro_Open"]
 
 technologies_per_node = {}
 

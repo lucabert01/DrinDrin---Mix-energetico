@@ -48,12 +48,14 @@ def transmission_capacity_into_matrix(anno):
 def import_hydro_inflows(input_data_path):
     """Importare i dati di flusso dei fiumi nei bacini idroelettrici. Per il pompaggio chiuso assumiamo 0
     visto che abbiamo assunto che tutti i flussi siano diretti ai bacini aperti"""
-    data_path = Path("./dati_casoStudioItalia/Hydro inflows 2017.xlsx")
+    data_path = Path("./dati_casoStudioItalia/Hydro_inflows_2024.xlsx")
     hydro_inflows =  pd.read_excel(data_path, sheet_name="Hydro_inflows", index_col=0)
     nodes = hydro_inflows.columns.tolist()
     hydro_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
     run_of_river_inflows =  pd.read_excel(data_path, sheet_name="run_of_river", index_col=0)
     ror_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
+    open_pumped_stor_inflows =  pd.read_excel(data_path, sheet_name="pumped_storage_open_inflows", index_col=0)
+    open_pumped_stor_inflows_hourly = pd.DataFrame(index=range(0, 8760), columns=nodes)
 
     for node in nodes:
         for week in range(0,52):
@@ -61,13 +63,12 @@ def import_hydro_inflows(input_data_path):
             end_hour = (week + 1) * 168
             #Convert from GWh/week to MWh/h
             hydro_inflows_hourly.loc[start_hour:end_hour - 1, node] = hydro_inflows.loc[week+1, node]*1000/168
+            ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[week+1, node]*1000/168
+            open_pumped_stor_inflows_hourly.loc[start_hour:end_hour - 1, node] = open_pumped_stor_inflows.loc[week+1, node]*1000/168
             #add last day of the year manually
             hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]
-        for day in range(0,365):
-            start_hour = day * 24
-            end_hour = (day + 1) * 24
-            # Convert from GWh/day to MWh/h
-            ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[day + 1, node] * 1000 / 24
+            ror_inflows_hourly.loc[8736:8760, node] = run_of_river_inflows.loc[52, node]
+            open_pumped_stor_inflows_hourly.loc[8736:8760, node] = open_pumped_stor_inflows.loc[52, node]
 
 
     for node in nodes:
@@ -76,6 +77,7 @@ def import_hydro_inflows(input_data_path):
         )
         climate_data = pd.read_csv(climate_data_file)
         climate_data["Hydro_Reservoir_existing_inflow"] = hydro_inflows_hourly[node].values
+        climate_data["PumpedHydro_Open_existing_inflow"] = open_pumped_stor_inflows_hourly[node].values
         climate_data.to_csv(climate_data_file, index=False, sep=";")
 
         # Add run of river production

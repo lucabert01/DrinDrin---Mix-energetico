@@ -61,10 +61,10 @@ def import_hydro_inflows(input_data_path):
         for week in range(0,52):
             start_hour = week * 168
             end_hour = (week + 1) * 168
-            #Convert from GWh/week to MWh/h
-            hydro_inflows_hourly.loc[start_hour:end_hour - 1, node] = hydro_inflows.loc[week+1, node]*1000/168
-            ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[week+1, node]*1000/168
-            open_pumped_stor_inflows_hourly.loc[start_hour:end_hour - 1, node] = open_pumped_stor_inflows.loc[week+1, node]*1000/168
+            #Convert from MWh/week to MWh/h
+            hydro_inflows_hourly.loc[start_hour:end_hour - 1, node] = hydro_inflows.loc[week+1, node]/168
+            ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[week+1, node]/168
+            open_pumped_stor_inflows_hourly.loc[start_hour:end_hour - 1, node] = open_pumped_stor_inflows.loc[week+1, node]/168
             #add last day of the year manually
             hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]
             ror_inflows_hourly.loc[8736:8760, node] = run_of_river_inflows.loc[52, node]
@@ -150,7 +150,7 @@ def update_transmission_abroad_data(input_data_path, node_names, italy_as_an_isl
    path = Path("./dati_casoStudioItalia")
    el_transmission_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="Transmission_abroad")
    for node in node_names:
-      capacity = 0 if italy_as_an_island else el_transmission_data.loc[node, "Capacity"]
+      capacity = 0 if italy_as_an_island else el_transmission_data.loc[node, "capacity"]
 
       adopt.fill_carrier_data(input_data_path, value_or_data=capacity, columns=['Import limit'],
                               carriers=["electricity"],

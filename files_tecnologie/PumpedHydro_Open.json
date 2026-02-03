@@ -7,14 +7,14 @@
     "Economics": {
         "comment": "CAPEX in EUR/MWh or as a piecewise function, opex_variable in EUR/MWh total output, opex_fixed in % of up-front CAPEX",
         "CAPEX_model": 1,
-        "unit_CAPEX": 2593292.178,
+        "unit_CAPEX": 75623.1328125,
         "fix_CAPEX": 0,
         "piecewise_CAPEX": {
             "bp_x": "not defined",
             "bp_y": "not defined"
         },
         "OPEX_variable": 0,
-        "OPEX_fixed": 0.01,
+        "OPEX_fixed": 0.0043,
         "discount_rate": 0.052,
         "lifetime": 50,
         "decommission_cost": 0

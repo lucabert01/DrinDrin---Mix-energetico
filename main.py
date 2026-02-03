@@ -19,7 +19,7 @@ ref_year = 2040 # scelta possibile per la rete di trasmissione tra [2023, 2030,2
 max_new_trasmission_capacity = 0 # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
 emission_limit = 0*10**6 #tCO2/year
-italy_as_an_island = 1 # 1 if import/export abroad is NOT possible, 0 otherwise
+italy_as_an_island = 0 # 1 if import/export abroad is NOT possible, 0 otherwise
 green_field_hydro_only = 1 # 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
 n_design_days = 0
 if green_field_hydro_only:

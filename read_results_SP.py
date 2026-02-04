@@ -224,8 +224,8 @@ df_balanceTechs=df_balanceTechs.rename(columns={'Photovoltaic_electricity_output
     'Storage_Battery_electricity_output':'BESS_OUT',
     'Hydro_Reservoir_existing_electricity_input':'Hydro_IN',
     'Hydro_Reservoir_existing_electricity_output':'Hydro_OUT',
-    'PumpedHydro_Closed_existing_electricity_input':'PHS_IN',
-    'PumpedHydro_Closed_existing_electricity_output':'PHS_OUT',
+    'PumpedHydro_Open_existing_electricity_input':'PHS_IN',
+    'PumpedHydro_Open_existing_electricity_output':'PHS_OUT',
     'GasTurbine_simple_electricity_output':'GAS_PLANT_OUT',
 })
 

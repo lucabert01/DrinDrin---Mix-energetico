@@ -123,7 +123,7 @@ for study in case_studies:
     # removing hydro and coal and adding nuclear as possible new technologies
     new_technologies = ([tech for tech in existing_technologies if tech not in
                         ["Hydro_Reservoir", "PumpedHydro_Open", "CoalPlant"]]
-                        + ["NuclearPlant"])
+                        + ["NuclearPlant", "LiquidAirStorage"])
 
     if green_field_hydro_only:
         existing_technologies = ["Hydro_Reservoir", "PumpedHydro_Open"]

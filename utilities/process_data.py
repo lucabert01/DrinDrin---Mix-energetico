@@ -66,9 +66,9 @@ def import_hydro_inflows(input_data_path):
             ror_inflows_hourly.loc[start_hour:end_hour - 1, node] = run_of_river_inflows.loc[week+1, node]/168
             open_pumped_stor_inflows_hourly.loc[start_hour:end_hour - 1, node] = open_pumped_stor_inflows.loc[week+1, node]/168
             #add last day of the year manually
-            hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]
-            ror_inflows_hourly.loc[8736:8760, node] = run_of_river_inflows.loc[52, node]
-            open_pumped_stor_inflows_hourly.loc[8736:8760, node] = open_pumped_stor_inflows.loc[52, node]
+            hydro_inflows_hourly.loc[8736:8760, node] = hydro_inflows.loc[52, node]/168
+            ror_inflows_hourly.loc[8736:8760, node] = run_of_river_inflows.loc[52, node]/168
+            open_pumped_stor_inflows_hourly.loc[8736:8760, node] = open_pumped_stor_inflows.loc[52, node]/168
 
 
     for node in nodes:

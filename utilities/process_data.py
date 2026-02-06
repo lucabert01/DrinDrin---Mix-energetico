@@ -85,11 +85,14 @@ def import_hydro_inflows(input_data_path):
                                 carriers=["electricity"],
                                 nodes=[node])
 
-def update_technology_costs(path_files_technologies):
+def update_technology_costs(path_files_technologies, discount_rate_nuc):
    path = Path("./dati_casoStudioItalia")
    opex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="OPEX")
    discount_rate_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="discount_rate")
    capex_data = pd.read_excel(path / "altri_dati.xlsx", index_col=0, sheet_name="CAPEX")
+
+   discount_rate_data.loc["NuclearPlant", "discount_rate"] = discount_rate_nuc
+
 
    for json_file_path in Path(path_files_technologies).glob("*.json"):
       tech = json_file_path.stem  # Get the filename without .json extension

@@ -16,7 +16,7 @@
         "OPEX_variable": 0,
         "OPEX_fixed": 0.015,
         "discount_rate": 0.08,
-        "lifetime": 40,
+        "lifetime": 60,
         "decommission_cost": 0
     },
     "Performance": {
@@ -32,8 +32,8 @@
         "allow_only_one_direction": 1,
         "allow_only_one_direction_precise": 0,
         "performance": {
-            "eta_in": 0.7,
-            "eta_out": 0.7,
+            "eta_in": 0.72,
+            "eta_out": 0.72,
             "lambda": 0,
             "theta": 0
         }
@@ -43,8 +43,8 @@
         "power_energy_ratio": "flexratio",
         "charge_rate": 0.25,
         "discharge_rate": 0.25,
-        "capex_charging_power": 1110000,
-        "capex_discharging_power": 1110000
+        "capex_charging_power": 530000,
+        "capex_discharging_power": 530000
     },
     "Units": {
         "size": "MWh",

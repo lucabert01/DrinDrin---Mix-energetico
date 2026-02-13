@@ -15,43 +15,42 @@ Assunzioni importanti:
 # - green_field_hydro_only: 1 if the only existing technologies considered are hydro techs, 0 for full brownfield analysis
 # - italy_as_an_island: 1 if import/export abroad is NOT possible, 0 otherwise
 # - discount_nuc: discount rate for nuclearPlant
-case_studies = [
-    {"name": "Island_lowDisc_greenfield", "italy_as_an_island": 1, "discount_nuc": 0.045,  "green_field_hydro_only": 1},
-    {"name": "Island_highDisc_greenfield", "italy_as_an_island": 1, "discount_nuc": 0.1,  "green_field_hydro_only": 1},
-    {"name": "NotIsland_lowDisc_greenfield", "italy_as_an_island": 0, "discount_nuc": 0.045,  "green_field_hydro_only": 1},
-    {"name": "NotIsland_highDisc_greenfield", "italy_as_an_island": 0, "discount_nuc": 0.1,  "green_field_hydro_only": 1},
-]
 
-# parametri scenario
+
+# Create folder for results
+results_data_path = "./rawResults"
+# Create input data path and optimization templates
+input_data_path = Path("./casoStudioItalia")
+path_files_technologies = Path("./files_tecnologie")
+path_data_case_study = Path("./dati_casoStudioItalia")
+
+# read case studies
+df = pd.read_excel(path_data_case_study / "case_studies.xlsx")
+case_studies = df.to_dict(orient="records")
+
+# fixed parameters
 ref_year = 2040  # scelta possibile per la rete di trasmissione tra [2023, 2030,2035, 2040];
                  # e tra [2040, 2050] per aumento domanda dovuto a elettrificazione dei consumi
 max_new_trasmission_capacity = 0  # massima capacita' di trasmissione installabile tra un nodo e l'altro (numero arbitrario)
 carbon_tax = 0
-emission_limit = 0 * 10 ** 6  # tCO2/year
 n_design_days = 0
+
+
 
 for study in case_studies:
 
     italy_as_an_island = study["italy_as_an_island"]
     green_field_hydro_only = study["green_field_hydro_only"]
     discount_rate_nuc = study["discount_nuc"]
+    emission_limit = study["emission_limit"]
     name_case_study = study["name"]
 
-    #Define basepath
-    basepath = os.path.dirname(os.path.abspath(__file__))
 
-
-    # Create folder for results
-    results_data_path = "./rawResults"
-
-    # Create input data path and optimization templates
-    input_data_path = Path("./casoStudioItalia")
     input_data_path.mkdir(parents=True, exist_ok=True)
     adopt.create_optimization_templates(input_data_path)
 
     # Import data
-    path_files_technologies = Path("./files_tecnologie")
-    path_data_case_study = Path("./dati_casoStudioItalia")
+
     transmission_capacity_into_matrix(ref_year)
     # NOTE: !network capacities are modified to make them symmetrical!
     network_data = read_input_network_data(path_data_case_study)

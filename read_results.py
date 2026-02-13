@@ -211,6 +211,8 @@ df_balanceTechs=df_balanceTechs.rename(columns={'Photovoltaic_electricity_output
     'NuclearPlant_electricity_output':'Nuclear_out',
     'Storage_Battery_electricity_input':'BESS_in',
     'Storage_Battery_electricity_output':'BESS_out',
+    'CompressedAirStorage_electricity_input':'LDES_in',
+    'CompressedAirStorage_electricity_output':'LDES_out',
     'Hydro_Reservoir_existing_electricity_input':'Hydro_in',
     'Hydro_Reservoir_existing_electricity_output':'Hydro_out',
     'PumpedHydro_Open_existing_electricity_input':'PHS_in',
@@ -222,6 +224,7 @@ df_balanceTechs=df_balanceTechs.rename(columns={'Photovoltaic_electricity_output
 #cambio i segni delle colonne per mettere come positivi gli input e negativi gli output di energia
 
 df_balanceTechs["BESS_in"]=-df_balanceTechs["BESS_in"]
+df_balanceTechs["LDES_in"]=-df_balanceTechs["LDES_in"]
 df_balanceTechs["export"]=-df_balanceTechs["export"]
 df_balanceTechs["network_outflow"]=-df_balanceTechs["network_outflow"]
 df_balanceTechs["Hydro_in"]=-df_balanceTechs["Hydro_in"]
@@ -237,7 +240,7 @@ df_balanceTechs.to_csv(f"resultsReports/{report_name}_BalanceTechs.csv", index=F
 df_balanceTechsITA = df_balanceTechs.groupby("period").agg({'demand':'sum', 'export':'sum', 'import':'sum', 'network_inflow':'sum',
        'network_outflow':'sum', 'GasTurbine_out':'sum', 'Hydro_in':'sum', 'Hydro_out':'sum',
        'Nuclear_out':'sum', 'PV_curtailment':'sum', 'PV_out':'sum', 'PV_maxOut':'sum', 'BESS_in':'sum',
-       'BESS_out':'sum', 'Wind_curtailment':'sum', 'Wind_out':'sum', 'Wind_maxOut':'sum', 'PHS_in':'sum',
+       'BESS_out':'sum','LDES_in':'sum','LDES_out':'sum', 'Wind_curtailment':'sum', 'Wind_out':'sum', 'Wind_maxOut':'sum', 'PHS_in':'sum',
        'PHS_out':'sum','RunOfRiver_out':'sum'}).reset_index()
 
 df_balanceTechsITA["Day"]=df_balanceTechsITA["period"]//24+1
@@ -251,20 +254,20 @@ df_balanceTechsITA.loc[df_balanceTechsITA["month"]>12,"month"]=12
 df_meanDay=df_balanceTechsITA.groupby("Hour").agg({'demand':'mean', 'export':'mean', 'import':'mean', 'network_inflow':'mean',
        'network_outflow':'mean', 'GasTurbine_out':'mean', 'Hydro_in':'mean', 'Hydro_out':'mean',
        'Nuclear_out':'mean', 'PV_curtailment':'mean', 'PV_out':'mean', 'PV_maxOut':'mean', 'BESS_in':'mean',
-       'BESS_out':'mean', 'Wind_curtailment':'mean', 'Wind_out':'mean', 'Wind_maxOut':'mean', 'PHS_in':'mean',
+       'BESS_out':'mean','LDES_in':'mean','LDES_out':'mean', 'Wind_curtailment':'mean', 'Wind_out':'mean', 'Wind_maxOut':'mean', 'PHS_in':'mean',
        'PHS_out':'mean','RunOfRiver_out':'mean'}).reset_index()
 #calcolo il giorno medio di ogni mese
 df_meanDayMonth=df_balanceTechsITA.groupby(["month","Hour"]).agg({'demand':'mean', 'export':'mean', 'import':'mean', 'network_inflow':'mean',
        'network_outflow':'mean', 'GasTurbine_out':'mean', 'Hydro_in':'mean', 'Hydro_out':'mean',
        'Nuclear_out':'mean', 'PV_curtailment':'mean', 'PV_out':'mean', 'PV_maxOut':'mean', 'BESS_in':'mean',
-       'BESS_out':'mean', 'Wind_curtailment':'mean', 'Wind_out':'mean', 'Wind_maxOut':'mean', 'PHS_in':'mean',
+       'BESS_out':'mean','LDES_in':'mean','LDES_out':'mean', 'Wind_curtailment':'mean', 'Wind_out':'mean', 'Wind_maxOut':'mean', 'PHS_in':'mean',
        'PHS_out':'mean','RunOfRiver_out':'mean'}).reset_index()
 
 
 #PLOT 3 - Mean Day Italy Energy Balance for every month
 
 cols_to_plot = ['demand', 'export', 'import', 'GasTurbine_out', 'Hydro_in', 'Hydro_out',
-                'Nuclear_out', 'RunOfRiver_out','PV_out', 'BESS_in', 'BESS_out', 'Wind_out', 'PHS_in', 'PHS_out']
+                'Nuclear_out', 'RunOfRiver_out','PV_out', 'BESS_in', 'BESS_out','LDES_in', 'LDES_out', 'Wind_out', 'PHS_in', 'PHS_out']
 
 # prepare df: ensure sorted by month then Hour
 dfm = df_meanDayMonth.sort_values(['month', 'Hour']).copy()
@@ -286,6 +289,8 @@ colormap = {
     'PV_out': '#ffd700',    # yellow/gold
     'BESS_in': '#6a0dad',   # purple darker
     'BESS_out': '#c08bd6',  # purple lighter
+    'LDES_in': '#6a0dad',   # purple darker
+    'LDES_out': '#c08bd6',  # purple lighter
     'Wind_out': '#7fc97f',  # light green
     'PHS_in': '#7fdedc',    # light aquamarine
     'PHS_out': '#2aa5a5',   # darker aquamarine
@@ -407,7 +412,7 @@ plt.close(fig)
 df_maxout=df_balanceTechs.groupby("ZONE").agg({'demand':'max', 'export':'min', 'import':'max', 'network_inflow':'max',
        'network_outflow':'min', 'GasTurbine_out':'max', 'Hydro_in':'min', 'Hydro_out':'max',
        'Nuclear_out':'max','PV_maxOut':'max', 'BESS_in':'min',
-       'BESS_out':'max', 'Wind_maxOut':'max', 'PHS_in':'min',
+       'BESS_out':'max','LDES_in':'max','LDES_out':'max', 'Wind_maxOut':'max', 'PHS_in':'min',
        'PHS_out':'max'}).reset_index()
 
 ita_row = pd.DataFrame({
@@ -424,6 +429,8 @@ ita_row = pd.DataFrame({
     'PV_maxOut': [df_maxout['PV_maxOut'].sum()],
     'BESS_in': [df_maxout['BESS_in'].sum()],
     'BESS_out': [df_maxout['BESS_out'].sum()],
+    'LDES_in': [df_maxout['LDES_in'].sum()],
+    'LDES_out': [df_maxout['LDES_out'].sum()],
     'Wind_maxOut': [df_maxout['Wind_maxOut'].sum()],
     'PHS_in': [df_maxout['PHS_in'].sum()],
     'PHS_out': [df_maxout['PHS_out'].sum()]
@@ -434,7 +441,7 @@ numeric_cols = df_maxout.columns.difference(['ZONE'])
 df_maxout[numeric_cols] = (df_maxout[numeric_cols] / 1000).round(1)  # convert to GW and round
 
 # Split into two tables
-cols_table1 = ['ZONE', 'GasTurbine_out', 'Hydro_out', 'Nuclear_out', 'PV_maxOut', 'BESS_out', 'Wind_maxOut', 'PHS_out']
+cols_table1 = ['ZONE', 'GasTurbine_out', 'Hydro_out', 'Nuclear_out', 'PV_maxOut', 'BESS_out','LDES_out', 'Wind_maxOut', 'PHS_out']
 df_maxout_table1 = df_maxout[cols_table1]
 
 # All other columns except those in table1

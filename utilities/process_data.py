@@ -161,10 +161,10 @@ def update_transmission_abroad_data(input_data_path, node_names, italy_as_an_isl
       adopt.fill_carrier_data(input_data_path, value_or_data=capacity, columns=['Export limit'],
                               carriers=["electricity"],
                               nodes=[node])
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "price"]), columns=['Import price'],
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "import_price"]), columns=['Import price'],
                               carriers=["electricity"],
                               nodes=[node])
-      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "price"]),
+      adopt.fill_carrier_data(input_data_path, value_or_data=float(el_transmission_data.loc[node, "export_price"]),
                               columns=['Export price'],
                               carriers=["electricity"],
                               nodes=[node])

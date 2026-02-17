@@ -7,9 +7,9 @@
     "Economics": {
         "CAPEX_model": 1,
         "comment": "CAPEX in EUR/MW, OPEX_variable in EUR/MWh total output, OPEX_fixed in % of CAPEX_annual",
-        "unit_CAPEX": 676570.2999999999,
+        "unit_CAPEX": 591394.5,
         "fix_CAPEX": 0,
-        "OPEX_variable": 16.937521,
+        "OPEX_variable": 0,
         "OPEX_fixed": 0.017275,
         "discount_rate": 0.057,
         "lifetime": 25,
